@@ -44,6 +44,7 @@ jobs:
             -project App.xcodeproj -scheme App \
             -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
             -derivedDataPath DerivedData \
+            -quiet \
             CODE_SIGNING_ALLOWED=NO
 
       - name: Test
@@ -52,4 +53,22 @@ jobs:
             -project App.xcodeproj -scheme App \
             -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
             -derivedDataPath DerivedData \
+            -quiet \
             CODE_SIGNING_ALLOWED=NO
+
+  database:
+    name: Database access rules
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: supabase/setup-cli@v3
+        with:
+          version: 2.118.0
+
+      - name: Start Postgres with migrations and seed
+        run: supabase db start
+
+      - name: Run pgTAP access-rule tests
+        run: supabase test db
