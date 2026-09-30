@@ -1,36 +1,43 @@
 # Plan
 
-Phase checklists for [APP NAME]. Tick items as they land. Items in **Proposed additions** are Claude's suggestions and aren't part of the plan until the user approves them.
+Phase checklists for [APP NAME]. Tick items as they land. Items added after the original brief are marked with who added them and when.
 
-## Open questions from Phase 0 (answer before Phase 1)
-1. App name, bundle ID, Apple Developer team ID, and the domain for Universal Links. Is the paid Apple Developer Program membership active?
-2. Build path: GitHub Actions macOS CI plus the user's Mac? (The cloud session has no Xcode.)
-3. Per-metric privacy: `daily_summaries` is a wide row, but RLS filters whole rows, not columns. Switch to one row per metric, or keep the wide table behind a masking view?
-4. Private profile fields (birth_year, max_hr_override, preferred_sleep_source): move them to an owner-only `profile_private` table?
-5. Birth year source for max HR: HealthKit date of birth, falling back to a one-field prompt?
-6. Daily Effort: the sum of that day's workout Effort, or computed from all-day heart rate?
-7. Where to store naps (e.g. a `nap_minutes` field)?
-8. Sharable metric keys: sleep, resting_hr, hrv, steps, active_minutes, effort, workouts (+ vendor_score in Phase 6)?
-9. Join-screen preview: allow one narrow RPC that returns a group's name and member names/avatars to anyone holding a valid invite code?
-10. Hosted Supabase project for device sign-in: does one exist, or should we create one?
+## Open questions
+- App name, bundle ID, Apple Developer team ID, domain for Universal Links; paid Apple Developer Program? (Needed before the on-device step of Phase 1. Until then they are placeholders in one config file.)
+- Hosted Supabase project for device sign-in: exists, or create one?
+- Phase 2: add date of birth, body mass, biological sex, and VO2 max to the first Health permission sheet, so the unified score needs no second prompt later?
+- Phase 5: whose "local midnight" resets a leaderboard when members are in different time zones? Does the unified score join the leaderboards (this would amend principle 4)?
+
+## Resolved in Phase 0 (2026-09-30, the user accepted Claude's recommendations)
+- One row per metric per day (`daily_metrics`) so RLS enforces per-metric sharing; `daily_resolved` uses `security_invoker`.
+- Owner-only `profile_private` for birth_year, max_hr_override, preferred_sleep_source.
+- Age from HealthKit date of birth, with a one-field fallback.
+- Daily Effort = the sum of that day's workout Effort.
+- Naps live in the sleep row's `detail`, never in its value.
+- Metric keys: sleep, resting_hr, hrv, steps, active_minutes, effort, workouts (+ vendor_score).
+- `preview_group(invite_code)` RPC is the one exception to "non-members see nothing".
+- GitHub Actions CI (macOS build and test, Linux `supabase test db`); the user's Mac handles signing and device runs.
+- Account deletion before external TestFlight; `avatars` storage bucket in Phase 1.
 
 ## Phase 0: orient and plan
 - [x] CLAUDE.md with product, principles, stack, layout, data model, HealthKit rules, commands, Decisions
 - [x] docs/PLAN.md with Phases 1–6 as checklists
-- [ ] Questions and risks answered by the user; go-ahead for Phase 1
+- [x] Questions and risks answered by the user; go-ahead for Phase 1
 
 ## Phase 1: skeleton and sign-in
 - [ ] `project.yml` with an App target, a placeholder Widget target, shared sources, and a Tests target
 - [ ] Entitlements: HealthKit (with background delivery), Sign in with Apple, Push Notifications, App Groups, Associated Domains for [DOMAIN]
 - [ ] Health usage description in Info.plist
 - [ ] Supabase URL and anon key in an uncommitted `Secrets.xcconfig`; commit `Secrets.example.xcconfig`
-- [ ] `supabase/` migration with every table, the `daily_resolved` view, `can_view`, and the access policies
+- [ ] `supabase/` migration with every table (incl. `profile_private`, `daily_metrics`), the `daily_resolved` view, `can_view`, `preview_group`, and the access policies
+- [ ] `avatars` storage bucket and policies
 - [ ] `seed.sql` with 5 fake users in one group and 30 days of summaries
 - [ ] Access-rule tests (pgTAP) proving:
   - [ ] non-members see nothing
   - [ ] members see only enabled metrics
   - [ ] hidden dates stay hidden
   - [ ] users can write only their own rows
+- [ ] GitHub Actions CI: `xcodegen generate` + build + test on macOS; `supabase test db` on Linux
 - [ ] App: Sign in with Apple, then a profile screen (name, photo, time zone detected automatically)
 - [ ] **Done when:** `xcodegen generate` succeeds, the `xcodebuild` build succeeds, `supabase test db` passes, and the user can sign in on their iPhone
 
@@ -64,6 +71,7 @@ Phase checklists for [APP NAME]. Tick items as they land. Items in **Proposed ad
 - [ ] Sharing settings screen (per group, per metric, hidden dates)
 - [ ] Feed cards for everyone in the group
 - [ ] Swift Charts trends (with accessibility labels)
+- [ ] In-app account deletion (App Store Guideline 5.1.1(v)), including Sign in with Apple token revocation from an Edge Function
 - [ ] First TestFlight build
 
 ## Phase 4: background sync and widget
@@ -79,6 +87,7 @@ Phase checklists for [APP NAME]. Tick items as they land. Items in **Proposed ad
 - [ ] Shareable weekly recap image
 - [ ] Apple push notifications sent from an Edge Function using token-based auth
 - [ ] 48-hour stale-data nudge run by Cron
+- [ ] Unified score (added by the user 2026-09-30): one standardized number from HRV, exercise, age, weight, steps, etc., showing where each person stands and who is trending which way. Write a short design note in `docs/` first. Constraints are under Decisions in CLAUDE.md: computed on device, HRV only as change vs own baseline, no medical framing, ask before ranking it.
 
 ## Phase 6: vendor boosts
 - [ ] `vendor_connections` table and policies
@@ -86,12 +95,3 @@ Phase checklists for [APP NAME]. Tick items as they land. Items in **Proposed ad
 - [ ] Onboarding step 5: optional WHOOP or Oura boost
 - [ ] Set status to `capped` when a vendor's 10-user development limit is reached
 - [ ] Vendor scores shown as badges (green/yellow/red bands), never ranked
-
-## Proposed additions (not approved yet)
-- **Phase 1:** a GitHub Actions workflow that builds and tests on a macOS runner and runs `supabase test db` on Linux, so cloud sessions can verify every push.
-- **Phase 1:** a Supabase Storage bucket for avatars, with policies (owner writes; group-mates read).
-- **Phase 3, before external TestFlight:** in-app account deletion (App Store Guideline 5.1.1(v)), including Sign in with Apple token revocation from an Edge Function.
-- **Phase 5:** decide whose "local midnight" resets a leaderboard when group members are in different time zones.
-
-## Parking lot (not scheduled)
-- Biological or "fitness age" trend. It needs inputs such as VO2 max (Apple Watch only), and it risks reading as a medical claim in App Review. Revisit after Phase 5.

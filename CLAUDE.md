@@ -41,18 +41,22 @@ web/                 static invite page, privacy policy, apple-app-site-associat
 docs/                PLAN.md and decision notes
 ```
 
-## Data model (Postgres), as specified; see Decisions for changes
-- `profiles`: id (auth user id), display_name, avatar_url, timezone, birth_year, max_hr_override, devices text[], preferred_sleep_source
+## Data model (Postgres; agreed 2026-09-30, see Decisions)
+- `profiles` (group-mates may read): id (auth user id), display_name, avatar_url, timezone, devices text[]
+- `profile_private` (owner only): user_id, birth_year, max_hr_override, preferred_sleep_source
 - `groups`: id, name, invite_code (unique, short, human-typeable), created_by, created_at
 - `group_members`: group_id, user_id, role (owner|member), joined_at
-- `sharing_settings`: user_id, group_id, metric, enabled, hidden_dates date[]
+- `sharing_settings`: user_id, group_id, metric, enabled, hidden_dates date[]. No row = not shared.
 - `vendor_connections` (Phase 6): user_id, provider (whoop|oura), status (active|needs_reconnect|capped), encrypted_tokens, provider_user_id, last_synced_at
-- `daily_summaries`: user_id, date, source (apple_health|whoop_api|oura_api), sleep_minutes, sleep_stages jsonb, resting_hr, hrv_ms, steps, active_minutes, effort, vendor_score jsonb {name, value, band}, synced_at. PK (user_id, date, source)
-- `daily_resolved` view: one source per metric per day. Vendor API rows win for that vendor's metrics; otherwise apple_health.
+- `daily_metrics`, **one row per metric per day** (replaces the wide `daily_summaries`): user_id, date, metric, source (apple_health|whoop_api|oura_api), value numeric, detail jsonb, synced_at. PK (user_id, date, metric, source); uploads upsert on it.
+  - Metric keys (also the sharing keys): `sleep` (asleep minutes; detail holds stages and naps), `resting_hr`, `hrv` (ms), `steps`, `active_minutes`, `effort` (sum of that day's workout Effort), `workouts` (sharing key for the `workouts` table), `vendor_score` (Phase 6). The UI's "recovery metrics" toggle = `resting_hr` + `hrv`.
+- `daily_resolved` view (`security_invoker = true`, so RLS still applies): one source per (user, date, metric). Vendor API rows win for that vendor's metrics; otherwise apple_health.
 - `workouts`: user_id, source, source_id, start_at, end_at, type, avg_hr, zone_minutes int[5], effort. Unique (source, source_id)
 - `reactions`: id, author_id, target_type (day|workout), target_id, emoji, comment, created_at
 - `push_tokens`: user_id, apns_token, updated_at
 - `can_view(viewer uuid, owner uuid, metric text, day date) returns boolean`, used by every read policy.
+- `preview_group(invite_code)`: the **only** exception to "non-members see nothing". It returns the group name plus member names and avatars to anyone holding a valid code, for the Join screen.
+- Storage bucket `avatars` with its own policies: the owner writes their own folder.
 
 ## HealthKit rules
 - **Read-only** access: step count, sleep analysis (with stages), resting HR, HRV (SDNN), heart rate, Apple exercise time, workouts. Request write access **only in DEBUG** builds, for the seeding tool.
@@ -62,7 +66,7 @@ docs/                PLAN.md and decision notes
 - **Resting HR:** the day's resting HR sample, averaged if several. **HRV:** mean of that night's samples; only ever *shown* as % change vs the user's own 30-day median.
 - **Active minutes:** Apple exercise time where present, otherwise total workout minutes.
 - **Workouts:** from `HKWorkout`. Minutes in 5 HR zones (50–60, 60–70, 70–80, 80–90, 90–100 % of max HR) from HR samples during the workout. Max HR = max_hr_override, else 220 − age. **Effort** = Σ(zone number × minutes in zone). De-duplicate by HealthKit UUID.
-- **Sync:** backfill 30 days after first authorization. Then `HKObserverQuery` with hourly background delivery + `HKAnchoredObjectQuery` with anchors persisted per type, plus a sync on every foreground. If the device is locked (HealthKit inaccessible), defer and retry. Uploads are idempotent upserts keyed on (user_id, date, source).
+- **Sync:** backfill 30 days after first authorization. Then `HKObserverQuery` with hourly background delivery + `HKAnchoredObjectQuery` with anchors persisted per type, plus a sync on every foreground. If the device is locked (HealthKit inaccessible), defer and retry. Uploads are idempotent upserts keyed on (user_id, date, metric, source).
 - **Summarizer is a pure function** from samples to summaries, fully unit-tested with fixtures: night crossing midnight, nap, two sources for one night, DST change, time-zone travel.
 
 ## Onboarding (details in docs/PLAN.md)
@@ -100,4 +104,13 @@ supabase test db           # pgTAP tests in supabase/tests
 - **2026-09-30 · Fitbit data path.** Google Health for iOS 5.05 (rolling out from 2026-08-02) writes steps, heart rate, sleep, exercise, and vitals to Apple Health (Google Health → Connections → Apps and services → Apple Health). Press reports say **HRV does not transfer**. This is unverified until observed on the user's iPhone.
 - **2026-09-30 · Sign in with Apple** gives the user's name only on the *first* authorization and never gives a photo. The photo comes from the user (or an initials avatar).
 - **2026-09-30 · Sharing default.** No sharing_settings row means *not shared* (private by default). The onboarding preset creates the rows.
+- **2026-09-30 · Per-metric privacy.** Postgres RLS filters whole rows, not columns, so a wide daily row would leak unshared metrics. We store one row per metric (`daily_metrics`), and the read policy is `can_view(auth.uid(), user_id, metric, date)`. Views on top use `security_invoker = true`. Swift code still uses one `DailySummary` struct; the repository converts. The same reasoning moved birth_year, max_hr_override, and preferred_sleep_source into owner-only `profile_private`.
+- **2026-09-30 · Age for max HR** comes from HealthKit date of birth. If it's missing, ask for birth year in one field before the backfill.
+- **2026-09-30 · Daily Effort** = the sum of that day's workout Effort, not all-day heart rate (trackers sample all-day HR too differently to be fair).
+- **2026-09-30 · Build path.** A GitHub Actions workflow builds and tests the app on a macOS runner and runs `supabase test db` on Linux (free, because the repo is public). The user's Mac is used for signing and for running on the iPhone.
+- **2026-09-30 · Unified score (Phase 5).** The user wants one standardized score, built from HRV, exercise, age, weight, steps, etc., so friends can compare levels and trends. Constraints to respect:
+  - compute it on device, so weight never leaves the phone;
+  - HRV isn't comparable across devices (and Fitbit doesn't send it), so HRV counts only as change vs the user's own baseline;
+  - avoid medical framing such as "biological age";
+  - ranking it would amend principle 4, so ask first.
 - Open questions awaiting the user are listed at the top of `docs/PLAN.md`.
