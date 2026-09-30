@@ -11,26 +11,11 @@ struct RootView: View {
                 ProgressView()
             case .signedOut:
                 SignInView(auth: dependencies.auth)
-            case .signedIn:
-                SignedInPlaceholderView(session: dependencies.session)
+            case .signedIn(let userID):
+                SignedInView(userID: userID, dependencies: dependencies)
             }
         }
         .task { await dependencies.session.observe() }
-    }
-}
-
-/// Temporary landing screen after sign-in; the profile screen replaces it next.
-private struct SignedInPlaceholderView: View {
-    let session: SessionModel
-
-    var body: some View {
-        ContentUnavailableView {
-            Label("You're signed in", systemImage: "checkmark.circle")
-        } actions: {
-            Button("Sign out") {
-                Task { await session.signOut() }
-            }
-        }
     }
 }
 

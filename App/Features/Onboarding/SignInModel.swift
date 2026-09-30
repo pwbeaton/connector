@@ -52,14 +52,9 @@ final class SignInModel {
         isSigningIn = true
         defer { isSigningIn = false }
         do {
-            try await auth.signInWithApple(idToken: idToken, nonce: nonce)
+            try await auth.signInWithApple(idToken: idToken, nonce: nonce, name: name)
         } catch {
             errorMessage = "We couldn't sign you in. Check your connection and try again."
-            return
-        }
-        // Apple sends the name only the first time; keep it if we got it.
-        if let name, name.givenName != nil || name.familyName != nil {
-            try? await auth.saveNameFromApple(name)
         }
     }
 }
