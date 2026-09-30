@@ -51,10 +51,11 @@ docs/                PLAN.md and decision notes
 - `daily_metrics`, **one row per metric per day** (replaces the wide `daily_summaries`): user_id, date, metric, source (apple_health|whoop_api|oura_api), value numeric, detail jsonb, synced_at. PK (user_id, date, metric, source); uploads upsert on it.
   - Metric keys (also the sharing keys): `sleep` (asleep minutes; detail holds stages and naps), `resting_hr`, `hrv` (ms), `steps`, `active_minutes`, `effort` (sum of that day's workout Effort), `workouts` (sharing key for the `workouts` table), `vendor_score` (Phase 6). The UI's "recovery metrics" toggle = `resting_hr` + `hrv`.
 - `daily_resolved` view (`security_invoker = true`, so RLS still applies): one source per (user, date, metric). Vendor API rows win for that vendor's metrics; otherwise apple_health.
-- `workouts`: user_id, source, source_id, start_at, end_at, type, avg_hr, zone_minutes int[5], effort. Unique (source, source_id)
-- `reactions`: id, author_id, target_type (day|workout), target_id, emoji, comment, created_at
-- `push_tokens`: user_id, apns_token, updated_at
-- `can_view(viewer uuid, owner uuid, metric text, day date) returns boolean`, used by every read policy.
+- `workouts`: id, user_id, source, source_id, local_date (owner's day, for hidden dates), start_at, end_at, type, avg_hr, zone_minutes int[5], effort. Unique (source, source_id)
+- `reactions`: id, group_id (visible only in that group), author_id, owner_id, target_type (day|workout), day, workout_id, emoji, comment, created_at
+- `push_tokens`: apns_token (PK; one per device), user_id, updated_at
+- `private.can_view(viewer, owner, metric, day)`, used by every read policy (metric null = "any metric", for day-card reactions). Helpers live in the `private` schema, which the API doesn't expose.
+- Writes: groups/memberships change only via RPCs (`create_group` now, `join_group` in Phase 3). Clients write only `source = 'apple_health'`. Column-level grants: an update payload must contain only granted columns (never `id`).
 - `preview_group(invite_code)`: the **only** exception to "non-members see nothing". It returns the group name plus member names and avatars to anyone holding a valid code, for the Join screen.
 - Storage bucket `avatars` with its own policies: the owner writes their own folder.
 
@@ -75,21 +76,22 @@ Invite link → Sign in with Apple → name + photo → device tiles → Health 
 ## Design
 Native and calm: system fonts, SF Symbols, light + dark, Dynamic Type, large tap targets, rounded cards, haptics on reactions. One accent color; green/yellow/red bands are reserved for vendor scores. Must work on an iPhone SE-sized screen. Accessibility labels on charts.
 
-## Commands (to be verified in Phase 1; keep exact)
+## Commands (verified in CI, 2026-09-30)
 ```sh
-# iOS (macOS only)
+# iOS (macOS only). Project and scheme are both "App"; identity comes from Config/Identity.xcconfig.
 xcodegen generate
-xcrun simctl list devices available        # pick an iPhone simulator UDID; never assume a name
-xcodebuild -project "[APP NAME].xcodeproj" -scheme "[APP NAME]" \
-  -destination "platform=iOS Simulator,id=<UDID>" build
-xcodebuild -project "[APP NAME].xcodeproj" -scheme "[APP NAME]" \
-  -destination "platform=iOS Simulator,id=<UDID>" test
+UDID="$(scripts/pick-simulator.sh)"         # an available iPhone simulator; never assume a name
+xcodebuild build-for-testing -project App.xcodeproj -scheme App \
+  -destination "platform=iOS Simulator,id=$UDID" -quiet CODE_SIGNING_ALLOWED=NO
+xcodebuild test-without-building -project App.xcodeproj -scheme App \
+  -destination "platform=iOS Simulator,id=$UDID" CODE_SIGNING_ALLOWED=NO   # no -quiet: it hides test results
 
 # Supabase (needs Docker)
-supabase start
+supabase start             # full local stack (or `supabase db start` for Postgres only)
 supabase db reset          # re-apply migrations + seed.sql
-supabase test db           # pgTAP tests in supabase/tests
+supabase test db           # pgTAP tests in supabase/tests (78 assertions)
 ```
+CI (`.github/workflows/ci.yml`) runs exactly these on every push: `macos-26` (newest non-beta Xcode) and `ubuntu-latest` (Supabase CLI 2.118.0). Read results with the GitHub MCP tools (`actions_list`, `get_job_logs`).
 
 ## How we work
 - Use plan mode before each phase: list files and key decisions, then wait for approval.
@@ -100,7 +102,7 @@ supabase test db           # pgTAP tests in supabase/tests
 - Prefer simple, readable code over clever code; the user will maintain it.
 
 ## Decisions
-- **2026-09-30 · Build environment.** Claude Code cloud sessions run on Linux: no Xcode, no Simulator, and `download.swift.org` is blocked, so iOS builds and tests must run on the user's Mac or a macOS CI runner. Docker is installed but not running (start it with `dockerd &`). Docker Hub is reachable; `public.ecr.aws` (Supabase's default image registry) is blocked. The Supabase CLI installs via npm.
+- **2026-09-30 · Build environment.** Claude Code cloud sessions run on Linux: no Xcode, no Simulator, and `download.swift.org` is blocked, so iOS builds and tests must run on the user's Mac or a macOS CI runner. Docker is installed but not running (start it with `dockerd &`). The Supabase CLI installs via npm (`npm install -g supabase@2.118.0`).
 - **2026-09-30 · Fitbit data path.** Google Health for iOS 5.05 (rolling out from 2026-08-02) writes steps, heart rate, sleep, exercise, and vitals to Apple Health (Google Health → Connections → Apps and services → Apple Health). Press reports say **HRV does not transfer**. This is unverified until observed on the user's iPhone.
 - **2026-09-30 · Sign in with Apple** gives the user's name only on the *first* authorization and never gives a photo. The photo comes from the user (or an initials avatar).
 - **2026-09-30 · Sharing default.** No sharing_settings row means *not shared* (private by default). The onboarding preset creates the rows.
@@ -113,4 +115,9 @@ supabase test db           # pgTAP tests in supabase/tests
   - HRV isn't comparable across devices (and Fitbit doesn't send it), so HRV counts only as change vs the user's own baseline;
   - avoid medical framing such as "biological age";
   - ranking it would amend principle 4, so ask first.
+- **2026-09-30 · Local Supabase in cloud sessions.** `public.ecr.aws` and GHCR's blob host are blocked and Docker Hub is often rate-limited on the shared IP; port 54322 is also taken (override with `SUPABASE_DB_PORT=55322`). When `supabase db start` can't pull images, run the cached `supabase/postgres` image directly, add stand-ins for the Auth/Storage tables plus the current `auth.uid()` (Auth-service versions), and run the test files with psql. CI remains the authority.
+- **2026-09-30 · Swift setup.** The module is named `App`, so write `SwiftUI.App`. The widget target is `WidgetExtension`, because a module named `Widget` clashes with WidgetKit. The App and Tests targets default to `MainActor` isolation; mark plain data types (DTOs, pure helpers) `nonisolated` so the SDK can encode and decode them off the main thread.
+- **2026-09-30 · supabase-swift 2.55.3 API.** Sign in: `auth.signInWithIdToken(credentials: OpenIDConnectCredentials(provider: .apple, idToken:, nonce:))`, sending Apple `SHA256(nonce)`. The client uses `emitLocalSessionAsInitialSession: true`. Sign out with `scope: .local` so other devices stay signed in. `update(...)` is `throws` (not async) and chains into `.select().single().execute().value`.
+- **2026-09-30 · Avatars.** Paths are `<lowercase user id>/<uuid>.jpg`: storage policies compare the folder with `auth.uid()::text`, which is lowercase, while Swift's `uuidString` is uppercase.
+- **2026-09-30 · pgTAP.** `results_eq` fails comparing `name`-typed columns ("could not determine which collation"), so compare with `is(array_agg(...), array[...])`. Tests act as users with `set_config('role', …)` plus `request.jwt.claims` (helpers in `supabase/tests/000-setup-tests-hooks.sql`).
 - Open questions awaiting the user are listed at the top of `docs/PLAN.md`.

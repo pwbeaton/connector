@@ -25,19 +25,19 @@ Phase checklists for [APP NAME]. Tick items as they land. Items added after the 
 - [x] Questions and risks answered by the user; go-ahead for Phase 1
 
 ## Phase 1: skeleton and sign-in
-- [ ] `project.yml` with an App target, a placeholder Widget target, shared sources, and a Tests target
-- [ ] Entitlements: HealthKit (with background delivery), Sign in with Apple, Push Notifications, App Groups, Associated Domains for [DOMAIN]
-- [ ] Health usage description in Info.plist
-- [ ] Supabase URL and anon key in an uncommitted `Secrets.xcconfig`; commit `Secrets.example.xcconfig`
-- [ ] `supabase/` migration with every table (incl. `profile_private`, `daily_metrics`), the `daily_resolved` view, `can_view`, `preview_group`, and the access policies
-- [ ] `avatars` storage bucket and policies
-- [ ] `seed.sql` with 5 fake users in one group and 30 days of summaries
-- [ ] Access-rule tests (pgTAP) proving:
-  - [ ] non-members see nothing
-  - [ ] members see only enabled metrics
-  - [ ] hidden dates stay hidden
-  - [ ] users can write only their own rows
-- [ ] GitHub Actions CI: `xcodegen generate` + build + test on macOS; `supabase test db` on Linux
+- [x] `project.yml` with an App target, a placeholder Widget target, shared sources, and a Tests target
+- [x] Entitlements: HealthKit (with background delivery), Sign in with Apple, Push Notifications, App Groups, Associated Domains for [DOMAIN]
+- [x] Health usage description in Info.plist
+- [x] Supabase URL and anon key in an uncommitted `Secrets.xcconfig`; commit `Secrets.example.xcconfig`
+- [x] `supabase/` migration with every table (incl. `profile_private`, `daily_metrics`), the `daily_resolved` view, `can_view`, `preview_group`, and the access policies
+- [x] `avatars` storage bucket and policies
+- [x] `seed.sql` with 5 fake users in one group and 30 days of summaries
+- [x] Access-rule tests (pgTAP) proving:
+  - [x] non-members see nothing
+  - [x] members see only enabled metrics
+  - [x] hidden dates stay hidden
+  - [x] users can write only their own rows
+- [x] GitHub Actions CI: `xcodegen generate` + build + test on macOS; `supabase test db` on Linux
 - [ ] App: Sign in with Apple, then a profile screen (name, photo, time zone detected automatically)
 - [ ] **Done when:** `xcodegen generate` succeeds, the `xcodebuild` build succeeds, `supabase test db` passes, and the user can sign in on their iPhone
 
