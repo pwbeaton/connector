@@ -1,0 +1,55 @@
+# Builds and tests on every push. Cloud Claude Code sessions have no Xcode,
+# so this workflow is how iOS changes get verified before they reach you.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ios:
+    name: iOS build and test
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use the newest installed Xcode (non-beta)
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -n 1)"
+          sudo xcode-select --switch "$XCODE"
+          xcodebuild -version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Generate the Xcode project
+        run: xcodegen generate
+
+      - name: Pick a simulator
+        run: |
+          UDID="$(scripts/pick-simulator.sh)"
+          xcrun simctl list devices available | grep "$UDID"
+          echo "SIMULATOR_UDID=$UDID" >> "$GITHUB_ENV"
+
+      # CI builds without code signing: simulators don't need it, and it keeps
+      # the team ID out of CI.
+      - name: Build
+        run: |
+          xcodebuild build-for-testing \
+            -project App.xcodeproj -scheme App \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Test
+        run: |
+          xcodebuild test-without-building \
+            -project App.xcodeproj -scheme App \
+            -destination "platform=iOS Simulator,id=$SIMULATOR_UDID" \
+            -derivedDataPath DerivedData \
+            CODE_SIGNING_ALLOWED=NO

@@ -1,0 +1,24 @@
+# Xcode project is generated from project.yml by `xcodegen generate`; never commit it.
+*.xcodeproj/
+*.xcworkspace/
+# Info.plist and .entitlements files are generated from project.yml too.
+Config/Generated/
+
+# Local secrets (copy Config/Secrets.example.xcconfig to create it).
+Config/Secrets.xcconfig
+
+# Xcode and Swift build output
+DerivedData/
+build/
+.build/
+*.xcresult
+xcuserdata/
+
+# Supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+supabase/.env
+.env
+
+# macOS
+.DS_Store

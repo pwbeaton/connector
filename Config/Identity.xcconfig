@@ -1,0 +1,19 @@
+// The app's identity. This is the only file to edit when the name, bundle ID,
+// team, or domain changes; project.yml, Info.plist, and the entitlements read
+// these values.
+//
+// PLACEHOLDERS: replace them with the real values before running on a device
+// (see docs/PLAN.md, "Open questions"). CI builds without code signing, so the
+// placeholders are enough for it.
+
+APP_DISPLAY_NAME = Placeholder
+APP_BUNDLE_ID = com.example.placeholder
+APP_GROUP_ID = group.$(APP_BUNDLE_ID)
+APP_DOMAIN = example.com
+
+// Your Apple Developer team ID (10 characters, from developer.apple.com → Membership).
+DEVELOPMENT_TEAM =
+
+// Supabase URL and anon key live in a local, uncommitted file.
+// "#include?" means "include if it exists", so CI builds without it.
+#include? "Secrets.xcconfig"
