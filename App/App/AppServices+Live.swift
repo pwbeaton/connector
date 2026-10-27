@@ -3,7 +3,7 @@ import Supabase
 
 extension AppServices {
     /// The real app: Google Health on the phone, Supabase for friends.
-    static func live(config: AppConfig) -> AppServices {
+    nonisolated static func live(config: AppConfig) -> AppServices {
         let googleConfig = GoogleOAuthConfig(clientID: config.googleClientID, redirectScheme: config.googleRedirectScheme)
         let session = GoogleSession(config: googleConfig)
         let source = GoogleHealthSource(client: GoogleHealthClient(session: session))

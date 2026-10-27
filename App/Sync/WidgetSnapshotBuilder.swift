@@ -1,6 +1,6 @@
 import Foundation
 
-extension WidgetSnapshot {
+nonisolated extension WidgetSnapshot {
     /// Today's widget numbers from the engine's results.
     nonisolated init(engine: EngineSnapshot, todayRecord: DayRecord?, updatedAt: Date) {
         let today = engine.todayScores
