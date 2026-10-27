@@ -9,3 +9,15 @@ nonisolated enum AppGroup {
         Bundle.main.object(forInfoDictionaryKey: "AppGroupID") as? String
     }
 }
+
+/// Where files shared by the app and the widget live.
+nonisolated enum SharedFiles {
+    /// The App Group container, or the app's own Application Support folder when the
+    /// App Group isn't available (unsigned simulator builds, tests).
+    static func directory(appGroup: String? = AppGroup.identifier) -> URL {
+        if let appGroup, let container = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: appGroup) {
+            return container
+        }
+        return URL.applicationSupportDirectory
+    }
+}

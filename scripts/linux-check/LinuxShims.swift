@@ -18,3 +18,11 @@ nonisolated enum Nonce {
         SHA256.hash(data: Data(input.utf8)).map { String(format: "%02x", $0) }.joined()
     }
 }
+
+nonisolated extension FileManager {
+    func containerURL(forSecurityApplicationGroupIdentifier groupIdentifier: String) -> URL? { nil }
+}
+
+nonisolated extension URL {
+    static var applicationSupportDirectory: URL { FileManager.default.temporaryDirectory.appendingPathComponent("AppSupport") }
+}

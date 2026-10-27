@@ -464,6 +464,25 @@ as $$
   order by rank, p.display_name;
 $$;
 
+-- A group's day cards: the daily summaries each member shares with THIS group
+-- (yours included) between two dates, at most 62 days apart. Security invoker,
+-- so RLS applies as well; unshared categories and hidden days are left out.
+create function public.group_feed(p_group_id uuid, from_date date, to_date date)
+returns table (user_id uuid, date date, metric text, value numeric, detail jsonb)
+language sql stable security invoker set search_path = ''
+as $$
+  select d.user_id, d.date, d.metric, d.value, d.detail
+  from public.daily_metrics d
+  where d.date >= group_feed.from_date
+    and d.date <= group_feed.to_date
+    and group_feed.to_date - group_feed.from_date <= 62
+    and private.is_group_member(p_group_id, (select auth.uid()))
+    and private.is_group_member(p_group_id, d.user_id)
+    and (d.user_id = (select auth.uid())
+         or private.shared_in_group(d.user_id, p_group_id, private.metric_category(d.metric), d.date))
+  order by d.date, d.user_id, d.metric;
+$$;
+
 -- Deletes your account and everything in it (App Store requirement).
 create function public.delete_my_account()
 returns void
@@ -484,11 +503,13 @@ revoke execute on function public.create_group(text) from public, anon;
 revoke execute on function public.join_group(text) from public, anon;
 revoke execute on function public.delete_my_account() from public, anon;
 revoke execute on function public.weekly_leaderboard(uuid, date, text) from public, anon;
+revoke execute on function public.group_feed(uuid, date, date) from public, anon;
 revoke execute on function public.preview_group(text) from public;
 grant execute on function public.create_group(text) to authenticated;
 grant execute on function public.join_group(text) to authenticated;
 grant execute on function public.delete_my_account() to authenticated;
 grant execute on function public.weekly_leaderboard(uuid, date, text) to authenticated;
+grant execute on function public.group_feed(uuid, date, date) to authenticated;
 grant execute on function public.preview_group(text) to anon, authenticated;
 grant execute on function public.group_challenge(date) to anon, authenticated;
 

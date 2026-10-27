@@ -33,8 +33,8 @@ App/App/                      AppMain, AppModel (demo | live | setupNeeded), Roo
 App/Features/{Onboarding,Today,Team,Trends,Profile}/   screens + their @Observable models
 App/Engine/                   pure, nonisolated scoring: DayRecord, baselines, scores, streaks, tier, challenges, badges, records
 App/Google/                   PKCE auth, Keychain token store, GoogleHealthClient, DTOs (from the API description), Mapper
-App/Sync/                     DayStore (App Group JSON), SyncEngine, background refresh
-App/Backend/                  Supabase client + repositories (auth, profile, groups, metrics, leaderboard, reactions)
+App/Sync/                     DayStore (App Group JSON), HealthDataSource, SyncEngine, MetricRows, widget bridge, background refresh
+App/Backend/                  Backend protocol + models (pure), SupabaseBackend (the only file importing Supabase)
 App/Demo/                     deterministic demo data (90 days + demo friends) for demo mode, previews, screenshots
 App/DesignSystem/             reusable views (dials, rings, cards, avatar)
 Shared/                       Theme tokens, App Group helpers, widget snapshot (used by app + widget)
@@ -94,6 +94,8 @@ Demo mode: launch with `-demo YES` (add `-screen <name> -screenshots YES` to ope
 - **2026-10-27 · V1 rebuild.** iOS only, Fitbit Air only, friends from day one, "training camp" style. Sign in with Apple and HealthKit were removed (they remain in git history before this date).
 - **2026-10-27 · Sign-in.** "Continue with Google" is the only sign-in. One consent creates the Supabase account (Google ID token, nonce check on) and grants Google Health access. Sign in with Apple can return if App Review asks (guideline 4.8).
 - **2026-10-27 · Leaderboards and sharing.** Sharing is by category (recovery | sleep | activity) per group. Leaderboards never include Recovery, HRV, or resting HR.
+- **2026-10-27 · Feeds are per group.** Day cards come from the `group_feed` RPC, which (like `weekly_leaderboard`) counts only what each member shares with *that* group, even if the viewer could see more through another group.
+- **2026-10-27 · Sync.** First sync back-fills 90 days; later syncs re-fetch the last 3 days plus any gap. Uploads diff against a per-row fingerprint stored on the phone, so unchanged rows aren't re-sent; a different Supabase account resets that map.
 - **2026-10-27 · No server jobs in V1.** Weekly challenges are deterministic from the ISO week. Push notifications come in V1.1.
 - **2026-09-30 · Build environment.** Cloud sessions run on Linux with no Xcode, so iOS builds and tests run in GitHub Actions (free: the repo is public). Docker isn't running at start (`dockerd &`). Supabase CLI: `npm install -g supabase@2.118.0`.
 - **2026-10-27 · Linux Swift check.** `scripts/linux-check.sh` mirrors every file that doesn't import an Apple-only framework into `.linux-check/` (git-ignored) and runs `swift test` in Docker `swift:6.2-noble` (needs `--network host` and the proxy CA). Keep Apple-only code (Keychain, SwiftUI, Supabase) in separate files so the rest stays checkable. It caught a test isolation error CI would have hit.
