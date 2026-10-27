@@ -211,11 +211,12 @@ nonisolated enum LeaderboardMetric: String, Codable, Sendable, CaseIterable, Ide
 
     var title: String {
         switch self {
+        // Short: five of these share one segmented control on an iPhone SE.
         case .effort: "Effort"
         case .steps: "Steps"
-        case .azm: "Zone minutes"
-        case .averageSleep: "Avg sleep"
-        case .longNights: "7h+ nights"
+        case .azm: "Zones"
+        case .averageSleep: "Sleep"
+        case .longNights: "7h+"
         }
     }
 
