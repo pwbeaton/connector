@@ -79,7 +79,8 @@ struct GoogleHealthMapperTests {
     @Test func classicSleepHasNoStages() throws {
         let nap = try JSONDecoder().decode(ListDataPointsResponseDTO.self, from: Data(Fixtures.sleep.utf8))
             .dataPoints?.last?.sleep
-        let night = try #require(GoogleHealthMapper.night(from: try #require(nap)))
+        let napDTO = try #require(nap)
+        let night = try #require(GoogleHealthMapper.night(from: napDTO))
         #expect(night.isNap)
         #expect(night.summary.hasStages == false)
         #expect(night.summary.deepMinutes == nil)
@@ -94,7 +95,7 @@ struct GoogleHealthMapperTests {
 struct GoogleHealthClientTests {
     private func client(_ transport: StubTransport, tokens: GoogleTokens = validTokens()) -> GoogleHealthClient {
         let session = GoogleSession(config: testConfig, store: InMemoryTokenStore(tokens), transport: transport,
-                                    now: { fixedNow })
+                                    now: { TestClock.now })
         return GoogleHealthClient(session: session, transport: transport, retryDelay: { _ in })
     }
 
@@ -130,25 +131,22 @@ struct GoogleHealthClientTests {
     }
 
     @Test func refreshesOnceAfterA401() async throws {
-        var apiCalls = 0
-        let transport = StubTransport { request in
+        let transport = StubTransport(withHistory: { request, earlier in
             if request.url == GoogleOAuthEndpoints.token {
                 return (200, #"{"access_token": "access-2", "expires_in": 3600}"#)
             }
-            apiCalls += 1
-            return apiCalls == 1 ? (401, "") : (200, Fixtures.pairedDevices)
-        }
+            let earlierAPICalls = earlier.filter { $0.url != GoogleOAuthEndpoints.token }.count
+            return earlierAPICalls == 0 ? (401, "") : (200, Fixtures.pairedDevices)
+        })
         let devices = try await client(transport).pairedDevices()
         #expect(devices.first?.deviceVersion == "Fitbit Air")
         #expect(transport.requests.last?.value(forHTTPHeaderField: "Authorization") == "Bearer access-2")
     }
 
     @Test func retriesRateLimitsThenSucceeds() async throws {
-        var calls = 0
-        let transport = StubTransport { _ in
-            calls += 1
-            return calls < 3 ? (429, "slow down") : (200, Fixtures.pairedDevices)
-        }
+        let transport = StubTransport(withHistory: { _, earlier in
+            earlier.count < 2 ? (429, "slow down") : (200, Fixtures.pairedDevices)
+        })
         let devices = try await client(transport).pairedDevices()
         #expect(devices.count == 1)
         #expect(transport.requests.count == 3)

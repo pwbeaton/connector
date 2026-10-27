@@ -1,29 +1,37 @@
 import Foundation
 @testable import App
 
-/// Answers HTTP requests from a handler and records what was sent.
-final class StubTransport: HTTPTransport, @unchecked Sendable {
+/// Answers HTTP requests from a handler and records what was sent. The handler is
+/// `@Sendable` because the client calls it from its own actor, not the test's main actor.
+nonisolated final class StubTransport: HTTPTransport, @unchecked Sendable {
+    typealias Handler = @Sendable (_ request: URLRequest, _ earlier: [URLRequest]) -> (Int, String)
+
     private let lock = NSLock()
-    private var handler: (URLRequest) -> (Int, String)
+    private let handler: Handler
     private var sent: [URLRequest] = []
 
-    init(_ handler: @escaping (URLRequest) -> (Int, String)) {
+    /// `earlier` holds the requests sent before this one, for answers that change over time.
+    init(withHistory handler: @escaping Handler) {
         self.handler = handler
+    }
+
+    convenience init(_ handler: @escaping @Sendable (URLRequest) -> (Int, String)) {
+        self.init(withHistory: { request, _ in handler(request) })
     }
 
     var requests: [URLRequest] { lock.withLock { sent } }
 
     func send(_ request: URLRequest) async throws -> (Data, HTTPURLResponse) {
         let (status, body) = lock.withLock { () -> (Int, String) in
-            sent.append(request)
-            return handler(request)
+            defer { sent.append(request) }
+            return handler(request, sent)
         }
         let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: nil, headerFields: nil)!
         return (Data(body.utf8), response)
     }
 }
 
-final class InMemoryTokenStore: TokenStoring, @unchecked Sendable {
+nonisolated final class InMemoryTokenStore: TokenStoring, @unchecked Sendable {
     private let lock = NSLock()
     private var tokens: GoogleTokens?
 
@@ -37,10 +45,13 @@ final class InMemoryTokenStore: TokenStoring, @unchecked Sendable {
 let testConfig = GoogleOAuthConfig(clientID: "1234-abc.apps.googleusercontent.com",
                                    redirectScheme: "com.googleusercontent.apps.1234-abc")
 
-let fixedNow = Date(timeIntervalSince1970: 1_800_000_000)
+/// A fixed "now" for token-expiry tests. Nonisolated so `@Sendable` clock closures can read it.
+nonisolated enum TestClock {
+    static let now = Date(timeIntervalSince1970: 1_800_000_000)
+}
 
 func validTokens(expiresIn seconds: TimeInterval = 3600, refresh: String? = "refresh-1") -> GoogleTokens {
-    GoogleTokens(accessToken: "access-1", expiresAt: fixedNow.addingTimeInterval(seconds), refreshToken: refresh,
+    GoogleTokens(accessToken: "access-1", expiresAt: TestClock.now.addingTimeInterval(seconds), refreshToken: refresh,
                  grantedScopes: Set(GoogleScopes.all), idToken: "id-token")
 }
 
@@ -53,7 +64,7 @@ extension URLRequest {
 }
 
 /// Responses shaped exactly like the Google Health API v4 description.
-enum Fixtures {
+nonisolated enum Fixtures {
     static let rollUp = """
     {
       "rollupDataPoints": [

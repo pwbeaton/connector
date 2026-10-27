@@ -63,10 +63,10 @@ struct AuthorizationRequestTests {
 struct TokenTests {
     @Test func tokenResponseBecomesTokens() throws {
         let response = try JSONDecoder().decode(TokenResponse.self, from: Data(Fixtures.tokenResponse.utf8))
-        let tokens = response.tokens(now: fixedNow)
+        let tokens = response.tokens(now: TestClock.now)
         #expect(tokens.accessToken == "access-new")
         #expect(tokens.refreshToken == "refresh-new")
-        #expect(tokens.expiresAt == fixedNow.addingTimeInterval(3599))
+        #expect(tokens.expiresAt == TestClock.now.addingTimeInterval(3599))
         #expect(tokens.has(GoogleScopes.sleep))
         #expect(!tokens.has(GoogleScopes.activity))
         #expect(tokens.idToken == "header.payload.signature")
@@ -75,7 +75,7 @@ struct TokenTests {
     @Test func refreshKeepsTheRefreshTokenAndScopes() throws {
         let json = #"{"access_token": "access-2", "expires_in": 3600, "token_type": "Bearer"}"#
         let response = try JSONDecoder().decode(TokenResponse.self, from: Data(json.utf8))
-        let refreshed = response.tokens(now: fixedNow, previous: validTokens())
+        let refreshed = response.tokens(now: TestClock.now, previous: validTokens())
         #expect(refreshed.accessToken == "access-2")
         #expect(refreshed.refreshToken == "refresh-1")
         #expect(refreshed.grantedScopes == Set(GoogleScopes.all))
@@ -89,8 +89,8 @@ struct TokenTests {
     }
 
     @Test func refreshesShortlyBeforeExpiry() {
-        #expect(validTokens(expiresIn: 30).needsRefresh(now: fixedNow))
-        #expect(!validTokens(expiresIn: 600).needsRefresh(now: fixedNow))
+        #expect(validTokens(expiresIn: 30).needsRefresh(now: TestClock.now))
+        #expect(!validTokens(expiresIn: 600).needsRefresh(now: TestClock.now))
     }
 
     @Test func exchangeRequestIsAFormPost() {
@@ -111,7 +111,7 @@ struct GoogleSessionTests {
     @Test func signInSavesTokens() async throws {
         let store = InMemoryTokenStore()
         let transport = StubTransport { _ in (200, Fixtures.tokenResponse) }
-        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { fixedNow })
+        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { TestClock.now })
         let request = AuthorizationRequest.make(config: testConfig)
 
         let tokens = try await session.completeSignIn(code: "4/abc", request: request)
@@ -123,7 +123,7 @@ struct GoogleSessionTests {
     @Test func refreshesAnExpiredAccessToken() async throws {
         let store = InMemoryTokenStore(validTokens(expiresIn: -10))
         let transport = StubTransport { _ in (200, #"{"access_token": "access-2", "expires_in": 3600}"#) }
-        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { fixedNow })
+        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { TestClock.now })
 
         #expect(try await session.accessToken() == "access-2")
         #expect(transport.requests.first?.bodyString.contains("grant_type=refresh_token") == true)
@@ -133,7 +133,7 @@ struct GoogleSessionTests {
     @Test func usesAFreshTokenWithoutCallingGoogle() async throws {
         let transport = StubTransport { _ in (500, "") }
         let session = GoogleSession(config: testConfig, store: InMemoryTokenStore(validTokens()), transport: transport,
-                                    now: { fixedNow })
+                                    now: { TestClock.now })
         #expect(try await session.accessToken() == "access-1")
         #expect(transport.requests.isEmpty)
     }
@@ -141,7 +141,7 @@ struct GoogleSessionTests {
     @Test func aRevokedRefreshTokenMeansReconnect() async throws {
         let store = InMemoryTokenStore(validTokens(expiresIn: -10))
         let transport = StubTransport { _ in (400, #"{"error": "invalid_grant"}"#) }
-        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { fixedNow })
+        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { TestClock.now })
 
         await #expect(throws: GoogleAuthError.reconnectRequired) { try await session.accessToken() }
         #expect(store.load() == nil)
@@ -155,7 +155,7 @@ struct GoogleSessionTests {
     @Test func signOutRevokesAndForgets() async {
         let store = InMemoryTokenStore(validTokens())
         let transport = StubTransport { _ in (200, "") }
-        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { fixedNow })
+        let session = GoogleSession(config: testConfig, store: store, transport: transport, now: { TestClock.now })
         await session.signOut()
         #expect(store.load() == nil)
         #expect(transport.requests.first?.url == GoogleOAuthEndpoints.revoke)
