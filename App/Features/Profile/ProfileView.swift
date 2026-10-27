@@ -21,7 +21,7 @@ struct ProfileView: View {
                 sharingSection
                 trackerSection
                 accountSection
-                Text("Scores are estimates to guide training, not medical advice. Version \(appVersion).")
+                Text("Scores are estimates to guide training, not medical advice.\nVersion \(appVersion)")
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity)

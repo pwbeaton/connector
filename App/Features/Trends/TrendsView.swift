@@ -118,7 +118,8 @@ struct TrendCard: View {
                 } else {
                     LineMark(x: .value("Day", point.date.noon, unit: .day), y: .value(title, point.value))
                         .foregroundStyle(color)
-                        .interpolationMethod(.catmullRom)
+                        // Monotone curves never overshoot the real values (catmull-rom can).
+                        .interpolationMethod(.monotone)
                     if range <= 30 {
                         PointMark(x: .value("Day", point.date.noon, unit: .day), y: .value(title, point.value))
                             .foregroundStyle(color)

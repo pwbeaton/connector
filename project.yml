@@ -19,7 +19,7 @@ configFiles:
 
 settings:
   base:
-    MARKETING_VERSION: "0.2.0"
+    MARKETING_VERSION: "0.3.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1" # iPhone only
     CODE_SIGN_STYLE: Automatic
@@ -48,6 +48,8 @@ targets:
       path: Config/Generated/App-Info.plist
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
         UILaunchScreen:
           UIColorName: LaunchBackground
@@ -107,6 +109,9 @@ targets:
       path: Config/Generated/Widget-Info.plist
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        # Must match the app's version, or App Store Connect rejects the upload.
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         AppGroupID: $(APP_GROUP_ID)

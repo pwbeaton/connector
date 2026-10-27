@@ -47,7 +47,7 @@ Every commit is pushed, and CI must be green before the next milestone starts.
 - [x] Team: friends' cards, reactions, leaderboards, group challenge, invite
 - [x] Trends (7/30/90-day charts, records) and Profile (tier, badges, settings, sign out, delete account)
 - [x] Demo mode everywhere; accessibility labels
-- [ ] Screenshots reviewed on small and large iPhones, light and dark
+- [x] Screenshots reviewed on small and large iPhones, light and dark (top and bottom of each tab)
 
 ### M6 · Widget, polish, docs
 - [x] Small and medium widgets
