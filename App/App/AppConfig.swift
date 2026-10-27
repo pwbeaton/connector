@@ -12,7 +12,7 @@ nonisolated struct AppConfig: Equatable, Sendable {
     /// The app's own scheme for invite links (<scheme>://join/CODE).
     let appURLScheme: String
 
-    enum LoadError: Error, Equatable {
+    nonisolated enum LoadError: Error, Equatable {
         /// Config/Secrets.xcconfig is missing, empty, or still has the example values.
         case missingSecrets
         /// SUPABASE_URL isn't a usable http(s) URL.
