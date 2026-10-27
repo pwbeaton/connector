@@ -2,8 +2,8 @@
 # Regenerate after any change:   xcodegen generate
 # Never edit App.xcodeproj by hand; it is git-ignored and rebuilt from this file.
 #
-# App identity (display name, bundle ID, App Group, domain, team) lives in
-# Config/Identity.xcconfig so it can change without touching this file.
+# App identity (name, bundle ID, App Group, team, Google client, URL scheme)
+# lives in Config/Identity.xcconfig so it can change without touching this file.
 
 name: App
 
@@ -19,7 +19,7 @@ configFiles:
 
 settings:
   base:
-    MARKETING_VERSION: "0.1.0"
+    MARKETING_VERSION: "0.2.0"
     CURRENT_PROJECT_VERSION: "1"
     TARGETED_DEVICE_FAMILY: "1" # iPhone only
     CODE_SIGN_STYLE: Automatic
@@ -49,34 +49,40 @@ targets:
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
         LSRequiresIPhoneOS: true
-        UILaunchScreen: {}
+        UILaunchScreen:
+          UIColorName: LaunchBackground
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
-        UIRequiredDeviceCapabilities:
-          - healthkit
-        NSHealthShareUsageDescription: >-
-          $(APP_DISPLAY_NAME) reads your sleep, heart rate, HRV, steps, exercise
-          minutes, and workouts to build daily summaries that you choose to share
-          with your group. Raw readings never leave your iPhone.
-        # Filled from Config/Secrets.xcconfig; empty when that file is missing.
+        # Only standard HTTPS is used, so no export-compliance paperwork for TestFlight.
+        ITSAppUsesNonExemptEncryption: false
+        CFBundleURLTypes:
+          # Where Google sends the user back after signing in.
+          - CFBundleURLName: google-sign-in
+            CFBundleURLSchemes:
+              - $(GOOGLE_URL_SCHEME)
+          # Invite links: <scheme>://join/CODE
+          - CFBundleURLName: invites
+            CFBundleURLSchemes:
+              - $(APP_URL_SCHEME)
+        # Background refresh (iOS decides when; opening the app always syncs).
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - $(APP_BUNDLE_ID).refresh
+        # Read by AppConfig at launch.
         SupabaseURL: $(SUPABASE_URL)
         SupabaseAnonKey: $(SUPABASE_ANON_KEY)
+        GoogleClientID: $(GOOGLE_IOS_CLIENT_ID)
+        GoogleRedirectScheme: $(GOOGLE_URL_SCHEME)
+        AppURLScheme: $(APP_URL_SCHEME)
         AppGroupID: $(APP_GROUP_ID)
     entitlements:
       path: Config/Generated/App.entitlements
       properties:
-        com.apple.developer.healthkit: true
-        com.apple.developer.healthkit.access: []
-        com.apple.developer.healthkit.background-delivery: true
-        com.apple.developer.applesignin:
-          - Default
-        aps-environment: development
         com.apple.security.application-groups:
           - $(APP_GROUP_ID)
-        com.apple.developer.associated-domains:
-          - applinks:$(APP_DOMAIN)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)

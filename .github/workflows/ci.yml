@@ -4,6 +4,8 @@ name: CI
 
 on:
   push:
+    branches-ignore:
+      - ci-screenshots
   pull_request:
 
 concurrency:
@@ -72,3 +74,48 @@ jobs:
 
       - name: Run pgTAP access-rule tests
         run: supabase test db
+
+  # Captures demo-mode screens on a small and a large iPhone (light and dark) and
+  # publishes them to the ci-screenshots branch, so the design can be reviewed
+  # from anywhere: `git fetch origin ci-screenshots`.
+  screenshots:
+    name: Screenshots (demo mode)
+    if: github.event_name == 'push'
+    runs-on: macos-26
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    env:
+      SCREENS: "today"
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Use the newest installed Xcode (non-beta)
+        run: |
+          XCODE="$(ls -d /Applications/Xcode_*.app | grep -iv beta | sort -V | tail -n 1)"
+          sudo xcode-select --switch "$XCODE"
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Build the app for the simulator
+        run: |
+          xcodegen generate
+          UDID="$(scripts/pick-simulator.sh)"
+          xcodebuild build -project App.xcodeproj -scheme App \
+            -destination "platform=iOS Simulator,id=$UDID" \
+            -derivedDataPath DerivedData -quiet CODE_SIGNING_ALLOWED=NO
+
+      - name: Capture screenshots
+        run: scripts/screenshots.sh DerivedData/Build/Products/Debug-iphonesimulator/App.app shots
+
+      - name: Publish to the ci-screenshots branch
+        run: |
+          cd shots
+          echo "Screenshots of ${GITHUB_SHA} (${GITHUB_REF_NAME}), $(date -u +%FT%TZ)" > SOURCE.txt
+          git init -q -b ci-screenshots
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -q -m "Screenshots for ${GITHUB_SHA}"
+          git push -q -f "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" ci-screenshots

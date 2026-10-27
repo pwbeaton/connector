@@ -2,8 +2,8 @@ import CryptoKit
 import Foundation
 import Security
 
-/// A one-time value that ties Apple's ID token to this sign-in attempt, so a
-/// stolen token can't be replayed. Apple receives the SHA-256 hash; Supabase
+/// A one-time value that ties Google's ID token to this sign-in attempt, so a
+/// stolen token can't be replayed. Google receives the SHA-256 hash; Supabase
 /// receives the raw value and checks that the two match.
 nonisolated enum Nonce {
     /// 64 URL-safe characters. 256 is a multiple of 64, so every character is
@@ -18,7 +18,7 @@ nonisolated enum Nonce {
         return String(bytes.map { characters[Int($0) % characters.count] })
     }
 
-    /// Lowercase hex SHA-256, the format Apple expects in `request.nonce`.
+    /// Lowercase hex SHA-256, the format Supabase compares against the token's nonce.
     static func sha256(_ input: String) -> String {
         SHA256.hash(data: Data(input.utf8))
             .map { String(format: "%02x", $0) }

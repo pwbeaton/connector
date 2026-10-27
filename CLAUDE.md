@@ -1,123 +1,103 @@
 # CLAUDE.md
 
-Memory for Claude Code sessions on this repo. Keep it under ~200 lines. Record anything learned or decided under **Decisions**. The full phase checklists live in `docs/PLAN.md`.
+Memory for Claude Code sessions on this repo. Keep it under ~200 lines. Record anything learned or decided under **Decisions**. The milestone checklist lives in `docs/PLAN.md`; score formulas in `docs/SCORES.md`.
 
-Placeholders still to be confirmed by the user (never guess them): **[APP NAME]**, **[DOMAIN]**, bundle ID, Apple team ID, App Group ID, Supabase project ref.
+Placeholders still to be confirmed by the user (never guess them): final app name ("Connector" is a working title), bundle ID, Apple team ID, Google iOS client ID, Supabase project ref.
 
-## Product
-A native iPhone app where a group of friends share sleep, recovery, and workout stats: WHOOP-style team sharing, but for any tracker. Friends join a group from an invite link, sign in with Apple, pick the tracker they wear, grant Apple Health access, and land on a feed of daily cards for everyone in the group (steps, sleep, resting HR, HRV trend, workouts, Effort). There are weekly leaderboards and a home-screen widget.
-- On iPhone, nearly every tracker writes to Apple Health (Apple Watch, Fitbit via Google Health, Garmin Connect, WHOOP, Oura), so **HealthKit is the single data source**.
-- Phase 6: WHOOP and Oura users may optionally connect vendor APIs to show proprietary scores (WHOOP Recovery, Oura Readiness).
+## Product (V1, rebuilt 2026-10-27)
+An iPhone app where friends compare training-camp style stats from their **Fitbit Air**: Recovery, Sleep, and Effort scores (0–100), Effort targets, streaks, training tiers, weekly challenges, badges, records, group leaderboards, and reactions.
+- **Data source:** the **Google Health API** (v4), called directly from the phone. The Fitbit Web API was shut down on 2026-10-30. Apple Health is not used, because Google Health doesn't send HRV to it.
+- **Friends from day one:** groups with invite codes, per-category sharing, leaderboards, and reactions, via Supabase.
+- **Style:** "Training camp", like WHOOP: scores front and center, sleek, dark-first, not cartoonish.
 - The user is new to iOS. Explain key decisions in a sentence or two, prefer boring and well-documented tools, and stop at checkpoints for review.
 
 ## Non-negotiable principles
-1. **Onboarding speed is the top metric.** Invite to your own filled-in card in about one minute. Every screen must justify itself.
-2. **Summarize on the device.** Read HealthKit locally and upload only daily and workout summaries. Never upload raw heart-rate samples, location, or body weight.
-3. **Private by default.** RLS on every table. A user may read another user's data only if they share a group, the owner's sharing_settings allow that metric for that group, and the date is not hidden. Tests prove it.
-4. **Never rank vendor-proprietary scores against each other.** Leaderboards use only sleep average, Effort, active minutes, steps, and streaks.
-5. **One source per metric per day** (rules below).
-6. **No secrets in the app binary.** Vendor client secrets live in Supabase Edge Function secrets.
+1. **Onboarding speed is the top metric.** Continue with Google → device check → goals → join or create a group → Today, in about one minute.
+2. **Summarize on the device.** Raw Google Health data stays on the phone. Only daily summaries (scores and daily totals) go to Supabase.
+3. **Private by default.** Row-level security (RLS) on every table. Others see your data only if you share a group, you share that category (recovery | sleep | activity) with that group, and the day isn't hidden. pgTAP tests prove it.
+4. **Never rank physiology.** Recovery, HRV, and resting HR appear on cards but never on leaderboards. Leaderboards use Effort, steps, average sleep, sleep consistency, and challenge points.
+5. **A missing day is never zero.** No data means "not worn / not synced", and it's shown that way.
+6. **No secrets in the app binary.** The iOS Google OAuth client has no secret. The Supabase anon key is public by design. Anything secret lives in Edge Function secrets.
 
 ## Stack (ask the user before changing)
-- iOS 17+, SwiftUI, Swift concurrency (async/await, actors), `@Observable`, Swift Charts, WidgetKit. Latest stable Xcode and Swift.
-- XcodeGen: `project.yml` is the source of truth. Never hand-edit the `.xcodeproj`; run `xcodegen generate`.
-- Swift Package Manager only. The one planned dependency is `supabase-swift`; justify any other before adding it.
-- Supabase: Postgres, Auth (Sign in with Apple via ID token), RLS, Edge Functions (TypeScript), Cron, Queues. Schema is SQL in `supabase/migrations`; run locally with `supabase start`.
-- Tests: Swift Testing for the app; pgTAP via `supabase test db` for access rules.
+- iOS 17+, SwiftUI, Swift 6 (App and Tests default to `MainActor`), `@Observable`, Swift Charts, WidgetKit.
+- XcodeGen: `project.yml` is the source of truth. Never hand-edit `.xcodeproj` (it's git-ignored); run `xcodegen generate`.
+- SPM only. The one dependency is `supabase-swift` (pinned 2.55.3). Google sign-in uses `ASWebAuthenticationSession` + PKCE with no Google SDK.
+- Supabase: Postgres + RLS, Auth (Google ID token), RPCs. No Edge Functions or Cron in V1.
+- Tests: Swift Testing (`Tests/`); pgTAP via `supabase test db` (`supabase/tests/`).
 
 ## Repository layout
 ```
-project.yml          XcodeGen spec
-App/App              entry point, routing, deep links
-App/Features         Onboarding, Feed, Groups, Leaderboard, Settings
-App/Health           HealthSource protocol, HealthKitSource, Summarizer, SyncEngine
-App/Data             Supabase client, repositories, DTOs
-App/DesignSystem     colors, typography, reusable views
-Widget/              WidgetKit extension
-Shared/              models + App Group cache used by app and widget
-Tests/               unit tests and fixtures
-supabase/            migrations, functions, tests, seed.sql
-web/                 static invite page, privacy policy, apple-app-site-association
-docs/                PLAN.md and decision notes
+project.yml, Config/          XcodeGen spec; Identity.xcconfig (name, IDs, Google client); Secrets.xcconfig (git-ignored)
+App/App/                      AppMain, AppModel (demo | live | setupNeeded), RootView, LaunchOptions, AppConfig
+App/Features/{Onboarding,Today,Team,Trends,Profile}/   screens + their @Observable models
+App/Engine/                   pure, nonisolated scoring: DayRecord, baselines, scores, streaks, tier, challenges, badges, records
+App/Google/                   PKCE auth, Keychain token store, GoogleHealthClient, DTOs (from the API description), Mapper
+App/Sync/                     DayStore (App Group JSON), SyncEngine, background refresh
+App/Backend/                  Supabase client + repositories (auth, profile, groups, metrics, leaderboard, reactions)
+App/Demo/                     deterministic demo data (90 days + demo friends) for demo mode, previews, screenshots
+App/DesignSystem/             reusable views (dials, rings, cards, avatar)
+Shared/                       Theme tokens, App Group helpers, widget snapshot (used by app + widget)
+Widget/                       WidgetKit extension (target name: WidgetExtension)
+Tests/                        Swift Testing tests and fixtures
+supabase/                     config.toml, migrations, seed.sql, pgTAP tests
+scripts/                      pick-simulator.sh, screenshots.sh
+docs/                         PLAN.md, SCORES.md, SETUP-GOOGLE.md, DEVICE-SETUP.md
 ```
 
-## Data model (Postgres; agreed 2026-09-30, see Decisions)
-- `profiles` (group-mates may read): id (auth user id), display_name, avatar_url, timezone, devices text[]
-- `profile_private` (owner only): user_id, birth_year, max_hr_override, preferred_sleep_source
-- `groups`: id, name, invite_code (unique, short, human-typeable), created_by, created_at
-- `group_members`: group_id, user_id, role (owner|member), joined_at
-- `sharing_settings`: user_id, group_id, metric, enabled, hidden_dates date[]. No row = not shared.
-- `vendor_connections` (Phase 6): user_id, provider (whoop|oura), status (active|needs_reconnect|capped), encrypted_tokens, provider_user_id, last_synced_at
-- `daily_metrics`, **one row per metric per day** (replaces the wide `daily_summaries`): user_id, date, metric, source (apple_health|whoop_api|oura_api), value numeric, detail jsonb, synced_at. PK (user_id, date, metric, source); uploads upsert on it.
-  - Metric keys (also the sharing keys): `sleep` (asleep minutes; detail holds stages and naps), `resting_hr`, `hrv` (ms), `steps`, `active_minutes`, `effort` (sum of that day's workout Effort), `workouts` (sharing key for the `workouts` table), `vendor_score` (Phase 6). The UI's "recovery metrics" toggle = `resting_hr` + `hrv`.
-- `daily_resolved` view (`security_invoker = true`, so RLS still applies): one source per (user, date, metric). Vendor API rows win for that vendor's metrics; otherwise apple_health.
-- `workouts`: id, user_id, source, source_id, local_date (owner's day, for hidden dates), start_at, end_at, type, avg_hr, zone_minutes int[5], effort. Unique (source, source_id)
-- `reactions`: id, group_id (visible only in that group), author_id, owner_id, target_type (day|workout), day, workout_id, emoji, comment, created_at
-- `push_tokens`: apns_token (PK; one per device), user_id, updated_at
-- `private.can_view(viewer, owner, metric, day)`, used by every read policy (metric null = "any metric", for day-card reactions). Helpers live in the `private` schema, which the API doesn't expose.
-- Writes: groups/memberships change only via RPCs (`create_group` now, `join_group` in Phase 3). Clients write only `source = 'apple_health'`. Column-level grants: an update payload must contain only granted columns (never `id`).
-- `preview_group(invite_code)`: the **only** exception to "non-members see nothing". It returns the group name plus member names and avatars to anyone holding a valid code, for the Join screen.
-- Storage bucket `avatars` with its own policies: the owner writes their own folder.
+## Google Health API rules
+- Base `https://health.googleapis.com/v4/users/me/...`. The API description (discovery doc) is `https://health.googleapis.com/$discovery/rest?version=v4`; trust it over memory.
+- Scopes (read-only): `openid email profile` + `googlehealth.{activity_and_fitness,sleep,health_metrics_and_measurements,profile,settings}.readonly`. Users can untick scopes, so check which ones were granted.
+- Daily totals: `dataTypes/{steps|distance|active-zone-minutes}/dataPoints:dailyRollUp` (POST, civil-date range ≤ 90 days).
+- Daily values: `list` on `daily-heart-rate-variability`, `daily-resting-heart-rate`, `daily-vo2-max`, `daily-respiratory-rate`, with filter `daily_heart_rate_variability.date >= "YYYY-MM-DD"` etc.
+- Sleep: `list` on `sleep` with filter `sleep.interval.civil_end_time >= "YYYY-MM-DD"`, max page size 25. Use `metadata.mainSleep`; naps are `metadata.nap`. A night belongs to the civil date of its end.
+- 64-bit integers arrive as JSON strings (`"countSum": "8423"`). Decode defensively; unknown fields are ignored.
+- `users/me/pairedDevices` (settings scope) gives "Fitbit Air", battery level, and last sync time; `users/me/profile` gives age.
+- The OAuth consent screen is **published (unverified)**. In "Testing", refresh tokens expire after 7 days. Unverified apps allow 100 users.
 
-## HealthKit rules
-- **Read-only** access: step count, sleep analysis (with stages), resting HR, HRV (SDNN), heart rate, Apple exercise time, workouts. Request write access **only in DEBUG** builds, for the seeding tool.
-- iOS never reveals whether read access was granted. After the sheet, look for samples from the last 7 days grouped by source (HKSource name + bundle ID). Map sources to device tiles in **one small data-driven table**. Don't hardcode guessed third-party bundle IDs as facts; log what is observed.
-- **Steps:** `HKStatisticsCollectionQuery`, cumulative sum per local day (HealthKit merges overlapping sources by the user's priority order).
-- **Sleep:** group asleep samples (core, deep, REM, unspecified) into sessions, merging gaps < 60 min. A night belongs to the local date of its final wake-up. `sleep_minutes` counts asleep stages only (not in-bed, not awake). Several sources for one night: use preferred_sleep_source, else the source with most asleep minutes. Naps (< 3 h, ending before 6 pm) are stored separately and don't count toward the night.
-- **Resting HR:** the day's resting HR sample, averaged if several. **HRV:** mean of that night's samples; only ever *shown* as % change vs the user's own 30-day median.
-- **Active minutes:** Apple exercise time where present, otherwise total workout minutes.
-- **Workouts:** from `HKWorkout`. Minutes in 5 HR zones (50–60, 60–70, 70–80, 80–90, 90–100 % of max HR) from HR samples during the workout. Max HR = max_hr_override, else 220 − age. **Effort** = Σ(zone number × minutes in zone). De-duplicate by HealthKit UUID.
-- **Sync:** backfill 30 days after first authorization. Then `HKObserverQuery` with hourly background delivery + `HKAnchoredObjectQuery` with anchors persisted per type, plus a sync on every foreground. If the device is locked (HealthKit inaccessible), defer and retry. Uploads are idempotent upserts keyed on (user_id, date, metric, source).
-- **Summarizer is a pure function** from samples to summaries, fully unit-tested with fixtures: night crossing midnight, nap, two sources for one night, DST change, time-zone travel.
+## Gamification (details and constants: docs/SCORES.md, App/Engine/ScoreTuning.swift)
+- **Recovery** = HRV vs 30-day baseline (50%) + resting HR vs baseline (20%) + Sleep score (30%). Bands: Go ≥67, Steady 34–66, Recover ≤33. It shows "Calibrating" until there are 7 nights.
+- **Sleep** = duration vs goal (50%), deep + REM share (25%), efficiency (15%), wake-time consistency (10%).
+- **Effort** = `100·(1−e^(−AZM/45))`. The Effort target comes from the Recovery band (Go 60–80, Steady 40–60, Recover 15–35).
+- **Streaks:** sleep goal, step goal, Effort on target. Rest tokens: 1 per 7-day streak, at most 2 banked.
+- **Tier** (28-day consistency): Rookie, Bronze, Silver, Gold, Platinum, Elite.
+- **Weekly challenges:** 3 personal + 1 group (rotating by ISO week). Badges and records.
 
-## Onboarding (details in docs/PLAN.md)
-Invite link → Sign in with Apple → name + photo → device tiles → Health primer, system sheet, data-arriving check → (Phase 6 vendor boost) → sharing preset → backfill with progress → feed. **Never ask for notification permission during onboarding**; ask the first time someone reacts to the user's card.
-
-## Design
-Native and calm: system fonts, SF Symbols, light + dark, Dynamic Type, large tap targets, rounded cards, haptics on reactions. One accent color; green/yellow/red bands are reserved for vendor scores. Must work on an iPhone SE-sized screen. Accessibility labels on charts.
-
-## Commands (verified in CI, 2026-09-30)
+## Commands (verified in CI)
 ```sh
-# iOS (macOS only). Project and scheme are both "App"; identity comes from Config/Identity.xcconfig.
 xcodegen generate
 UDID="$(scripts/pick-simulator.sh)"         # an available iPhone simulator; never assume a name
 xcodebuild build-for-testing -project App.xcodeproj -scheme App \
   -destination "platform=iOS Simulator,id=$UDID" -quiet CODE_SIGNING_ALLOWED=NO
 xcodebuild test-without-building -project App.xcodeproj -scheme App \
   -destination "platform=iOS Simulator,id=$UDID" CODE_SIGNING_ALLOWED=NO   # no -quiet: it hides test results
+scripts/screenshots.sh <App.app> <out-dir>  # demo-mode screenshots (CI publishes them to the ci-screenshots branch)
 
-# Supabase (needs Docker)
-supabase start             # full local stack (or `supabase db start` for Postgres only)
-supabase db reset          # re-apply migrations + seed.sql
-supabase test db           # pgTAP tests in supabase/tests (78 assertions)
+supabase start | supabase db start          # local stack / Postgres only (needs Docker)
+supabase db reset                           # re-apply migrations + seed.sql
+supabase test db                            # pgTAP tests
 ```
-CI (`.github/workflows/ci.yml`) runs exactly these on every push: `macos-26` (newest non-beta Xcode) and `ubuntu-latest` (Supabase CLI 2.118.0). Read results with the GitHub MCP tools (`actions_list`, `get_job_logs`).
+CI (`.github/workflows/ci.yml`) runs three jobs: `ios` (macos-26, newest non-beta Xcode), `database` (Supabase CLI 2.118.0), and `screenshots` (push only). Read results with `gh api repos/pwbeaton/connector/actions/...` or the GitHub MCP tools. Review screenshots with `git fetch origin ci-screenshots`.
+
+Demo mode: launch with `-demo YES` (add `-screen <name> -screenshots YES` to open a screen with animations off).
 
 ## How we work
 - Use plan mode before each phase: list files and key decisions, then wait for approval.
 - Small commits with clear messages. **Never commit secrets.** The GitHub repo is **public**.
 - After every change, build and run the tests, fix failures before moving on, and report the exact commands run.
-- When the user must act (Apple Developer portal, Xcode signing, Supabase dashboard, iPhone), stop and give numbered click-by-click steps.
-- If an Apple or Supabase API behaves unexpectedly, check current docs rather than guessing, and record the finding below.
+- When the user must act (Google Cloud, Supabase dashboard, Xcode signing, iPhone), give numbered click-by-click steps.
+- If an API behaves unexpectedly, check the current docs or the discovery doc rather than guessing, and record the finding below.
 - Prefer simple, readable code over clever code; the user will maintain it.
 
 ## Decisions
-- **2026-09-30 · Build environment.** Claude Code cloud sessions run on Linux: no Xcode, no Simulator, and `download.swift.org` is blocked, so iOS builds and tests must run on the user's Mac or a macOS CI runner. Docker is installed but not running (start it with `dockerd &`). The Supabase CLI installs via npm (`npm install -g supabase@2.118.0`).
-- **2026-09-30 · Fitbit data path.** Google Health for iOS 5.05 (rolling out from 2026-08-02) writes steps, heart rate, sleep, exercise, and vitals to Apple Health (Google Health → Connections → Apps and services → Apple Health). Press reports say **HRV does not transfer**. This is unverified until observed on the user's iPhone.
-- **2026-09-30 · Sign in with Apple** gives the user's name only on the *first* authorization and never gives a photo. The photo comes from the user (or an initials avatar).
-- **2026-09-30 · Sharing default.** No sharing_settings row means *not shared* (private by default). The onboarding preset creates the rows.
-- **2026-09-30 · Per-metric privacy.** Postgres RLS filters whole rows, not columns, so a wide daily row would leak unshared metrics. We store one row per metric (`daily_metrics`), and the read policy is `can_view(auth.uid(), user_id, metric, date)`. Views on top use `security_invoker = true`. Swift code still uses one `DailySummary` struct; the repository converts. The same reasoning moved birth_year, max_hr_override, and preferred_sleep_source into owner-only `profile_private`.
-- **2026-09-30 · Age for max HR** comes from HealthKit date of birth. If it's missing, ask for birth year in one field before the backfill.
-- **2026-09-30 · Daily Effort** = the sum of that day's workout Effort, not all-day heart rate (trackers sample all-day HR too differently to be fair).
-- **2026-09-30 · Build path.** A GitHub Actions workflow builds and tests the app on a macOS runner and runs `supabase test db` on Linux (free, because the repo is public). The user's Mac is used for signing and for running on the iPhone.
-- **2026-09-30 · Unified score (Phase 5).** The user wants one standardized score, built from HRV, exercise, age, weight, steps, etc., so friends can compare levels and trends. Constraints to respect:
-  - compute it on device, so weight never leaves the phone;
-  - HRV isn't comparable across devices (and Fitbit doesn't send it), so HRV counts only as change vs the user's own baseline;
-  - avoid medical framing such as "biological age";
-  - ranking it would amend principle 4, so ask first.
-- **2026-09-30 · Local Supabase in cloud sessions.** `public.ecr.aws` and GHCR's blob host are blocked and Docker Hub is often rate-limited on the shared IP; port 54322 is also taken (override with `SUPABASE_DB_PORT=55322`). When `supabase db start` can't pull images, run the cached `supabase/postgres` image directly, add stand-ins for the Auth/Storage tables plus the current `auth.uid()` (Auth-service versions), and run the test files with psql. CI remains the authority.
-- **2026-09-30 · Swift setup.** The module is named `App`, so write `SwiftUI.App`. The widget target is `WidgetExtension`, because a module named `Widget` clashes with WidgetKit. The App and Tests targets default to `MainActor` isolation; mark plain data types (DTOs, pure helpers) `nonisolated` so the SDK can encode and decode them off the main thread.
-- **2026-09-30 · supabase-swift 2.55.3 API.** Sign in: `auth.signInWithIdToken(credentials: OpenIDConnectCredentials(provider: .apple, idToken:, nonce:))`, sending Apple `SHA256(nonce)`. The client uses `emitLocalSessionAsInitialSession: true`. Sign out with `scope: .local` so other devices stay signed in. `update(...)` is `throws` (not async) and chains into `.select().single().execute().value`.
-- **2026-09-30 · Avatars.** Paths are `<lowercase user id>/<uuid>.jpg`: storage policies compare the folder with `auth.uid()::text`, which is lowercase, while Swift's `uuidString` is uppercase.
-- **2026-09-30 · pgTAP.** `results_eq` fails comparing `name`-typed columns ("could not determine which collation"), so compare with `is(array_agg(...), array[...])`. Tests act as users with `set_config('role', …)` plus `request.jwt.claims` (helpers in `supabase/tests/000-setup-tests-hooks.sql`).
-- Open questions awaiting the user are listed at the top of `docs/PLAN.md`.
+- **2026-10-27 · V1 rebuild.** iOS only, Fitbit Air only, friends from day one, "training camp" style. Sign in with Apple and HealthKit were removed (they remain in git history before this date).
+- **2026-10-27 · Sign-in.** "Continue with Google" is the only sign-in. One consent creates the Supabase account (Google ID token, nonce check on) and grants Google Health access. Sign in with Apple can return if App Review asks (guideline 4.8).
+- **2026-10-27 · Leaderboards and sharing.** Sharing is by category (recovery | sleep | activity) per group. Leaderboards never include Recovery, HRV, or resting HR.
+- **2026-10-27 · No server jobs in V1.** Weekly challenges are deterministic from the ISO week. Push notifications come in V1.1.
+- **2026-09-30 · Build environment.** Cloud sessions run on Linux with no Xcode, so iOS builds and tests run in GitHub Actions (free: the repo is public). Docker isn't running at start (`dockerd &`). Supabase CLI: `npm install -g supabase@2.118.0`.
+- **2026-09-30 · Local Supabase in cloud sessions.** `public.ecr.aws` and GHCR's blob host are blocked, Docker Hub is often rate-limited, and port 54322 is taken (`SUPABASE_DB_PORT=55322`). Fallback: run the cached `supabase/postgres` image directly, add stand-ins for the Auth/Storage tables and the current `auth.uid()`, and run test files with psql. CI is the authority.
+- **2026-09-30 · Swift setup.** The module is named `App`, so write `SwiftUI.App`. The widget target is `WidgetExtension`. Mark plain data types and pure helpers `nonisolated` so they work off the main actor.
+- **2026-09-30 · supabase-swift 2.55.3 API.** `auth.signInWithIdToken(credentials: OpenIDConnectCredentials(provider:, idToken:, nonce:))`. The client uses `emitLocalSessionAsInitialSession: true`. Sign out with `scope: .local`. `update(...)` is `throws` (not async).
+- **2026-09-30 · Avatars.** Storage paths are `<lowercase user id>/<uuid>.jpg`, because policies compare against `auth.uid()::text`.
+- **2026-09-30 · pgTAP.** `results_eq` fails on `name` columns (collation), so compare arrays with `is()`. Tests act as users via `set_config('role', …)` + `request.jwt.claims` (helpers in `supabase/tests/000-setup-tests-hooks.sql`).
+- **2026-09-30 · Column-level grants.** Update payloads may contain only granted columns, never `id`.
