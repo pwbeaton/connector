@@ -26,3 +26,8 @@ nonisolated extension FileManager {
 nonisolated extension URL {
     static var applicationSupportDirectory: URL { FileManager.default.temporaryDirectory.appendingPathComponent("AppSupport") }
 }
+
+extension AppServices {
+    /// The real one needs Supabase (Apple-only here); demo services stand in.
+    nonisolated static func live(config: AppConfig) -> AppServices { .demo() }
+}

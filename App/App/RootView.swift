@@ -6,40 +6,61 @@ struct RootView: View {
 
     var body: some View {
         Group {
-            switch model.mode {
-            case .demo, .live:
-                FoundationPreviewView()
-            case .setupNeeded(let reason):
+            if let session = model.session {
+                SessionView(session: session)
+            } else if case .setupNeeded(let reason) = model.mode {
                 SetupNeededView(reason: reason) { model.enterDemo() }
             }
         }
         .tint(Theme.effort)
+        .environment(\.animatesScores, !model.options.isScreenshotMode)
     }
 }
 
-/// Temporary first screen while the real tabs are built (milestone M0).
-private struct FoundationPreviewView: View {
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                Text("Today").font(.largeTitle.bold()).foregroundStyle(Theme.textPrimary)
-                HStack(spacing: 12) {
-                    scoreTile("Recovery", value: 78, color: Theme.recoveryGo)
-                    scoreTile("Sleep", value: 84, color: Theme.sleep)
-                    scoreTile("Effort", value: 41, color: Theme.effort)
-                }
-            }
-            .padding(Theme.screenPadding)
-        }
-        .background(Theme.background)
-    }
+/// Onboarding or the four tabs, for one session.
+struct SessionView: View {
+    let session: AppSession
 
-    private func scoreTile(_ title: String, value: Int, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).sectionLabel()
-            Text("\(value)").font(.scoreNumber(40)).foregroundStyle(color)
+    var body: some View {
+        Group {
+            switch session.phase {
+            case .loading:
+                ProgressView()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Theme.background.ignoresSafeArea())
+            case .onboarding:
+                if let onboarding = session.onboarding {
+                    OnboardingView(model: onboarding)
+                }
+            case .main:
+                MainTabView()
+            }
         }
-        .card()
+        .environment(session)
+        .task { await session.start() }
+        .onOpenURL { session.open($0) }
+    }
+}
+
+struct MainTabView: View {
+    @Environment(AppSession.self) private var session
+
+    var body: some View {
+        @Bindable var session = session
+        TabView(selection: $session.selectedTab) {
+            TodayView()
+                .tabItem { Label("Today", systemImage: "circle.circle.fill") }
+                .tag(MainTab.today)
+            TeamView()
+                .tabItem { Label("Team", systemImage: "person.3.fill") }
+                .tag(MainTab.team)
+            TrendsView()
+                .tabItem { Label("Trends", systemImage: "chart.bar.xaxis") }
+                .tag(MainTab.trends)
+            ProfileView()
+                .tabItem { Label("Profile", systemImage: "person.crop.circle") }
+                .tag(MainTab.profile)
+        }
     }
 }
 

@@ -2,7 +2,7 @@ import Foundation
 import Supabase
 
 /// Creates the one Supabase client the app uses.
-enum SupabaseService {
+nonisolated enum SupabaseService {
     static func makeClient(config: AppConfig) -> SupabaseClient {
         SupabaseClient(
             supabaseURL: config.supabaseURL,

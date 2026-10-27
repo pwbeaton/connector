@@ -15,14 +15,20 @@ final class AppModel {
 
     let options: LaunchOptions
     private(set) var mode: Mode
+    /// The signed-in (or demo) session; nil while setup is needed.
+    private(set) var session: AppSession?
 
-    init(options: LaunchOptions, loadConfig: () throws -> AppConfig = AppConfig.fromMainBundle) {
+    init(options: LaunchOptions, loadConfig: () throws -> AppConfig = AppConfig.fromMainBundle,
+         makeLiveServices: (AppConfig) -> AppServices = AppServices.live) {
         self.options = options
         if options.isDemo {
             mode = .demo
+            session = AppSession(services: Self.demoServices(for: options), options: options)
         } else {
             do {
-                mode = .live(try loadConfig())
+                let config = try loadConfig()
+                mode = .live(config)
+                session = AppSession(services: makeLiveServices(config), options: options)
             } catch let error as AppConfig.LoadError {
                 mode = .setupNeeded(error)
             } catch {
@@ -34,5 +40,147 @@ final class AppModel {
     /// Lets someone explore the app with sample data before setting anything up.
     func enterDemo() {
         mode = .demo
+        session = AppSession(services: Self.demoServices(for: options), options: options)
+    }
+
+    /// Demo onboarding screens start signed out and without a group, like a new user.
+    private static func demoServices(for options: LaunchOptions) -> AppServices {
+        let onboarding = options.screen.flatMap(OnboardingModel.Step.init(rawValue:))
+        return .demo(signedIn: onboarding.map { $0 != .welcome } ?? true, inGroup: onboarding == nil)
+    }
+}
+
+/// The tabs after onboarding.
+enum MainTab: String, CaseIterable, Hashable {
+    case today, team, trends, profile
+}
+
+/// One run of the app with its services: onboarding, then the four tabs.
+@Observable
+final class AppSession {
+    enum Phase: Equatable {
+        case loading
+        case onboarding
+        case main
+    }
+
+    let services: AppServices
+    let options: LaunchOptions
+    let health: HealthModel
+    let team: TeamModel
+    private(set) var phase = Phase.loading
+    private(set) var onboarding: OnboardingModel?
+    var selectedTab = MainTab.today
+    /// Your name and photo as friends see them.
+    private(set) var profile: Profile?
+    /// An invite code from a link (`<scheme>://join/CODE`) waiting to be joined.
+    var pendingInviteCode: String?
+
+    static let onboardingCompleteKey = "onboardingComplete"
+
+    init(services: AppServices, options: LaunchOptions) {
+        self.services = services
+        self.options = options
+        health = HealthModel(services: services)
+        team = TeamModel(services: services)
+        // The leaderboard opens on this week's group challenge.
+        team.leaderboardMetric = LeaderboardMetric(Challenges.group(for: CivilDate.today().weekStart))
+    }
+
+    var isDemo: Bool { services.isDemo }
+
+    /// Decides where to start, then loads data. Called once when the app appears.
+    func start() async {
+        guard phase == .loading else { return }
+        await health.load()
+
+        if let screen = options.screen, let step = OnboardingModel.Step(rawValue: screen) {
+            beginOnboarding(at: step)
+            if step == .goals || step == .group || step == .sharing { await health.sync() }
+            return
+        }
+
+        let signedIn = await services.backend.currentUserID() != nil
+        let finished = isDemo || UserDefaults.standard.bool(forKey: Self.onboardingCompleteKey)
+        if !signedIn {
+            beginOnboarding(at: .welcome)
+        } else if !finished {
+            beginOnboarding(at: .device)
+        } else {
+            if let tab = options.screen.flatMap(MainTab.init(rawValue:)) { selectedTab = tab }
+            phase = .main
+            await refresh()
+        }
+    }
+
+    /// Sync from the tracker, then reload friends. Runs on launch, on foreground, and on pull-to-refresh.
+    func refresh() async {
+        await health.sync()
+        await team.refresh(today: health.today)
+        if let profile = try? await services.backend.myProfile() { self.profile = profile }
+    }
+
+    func beginOnboarding(at step: OnboardingModel.Step) {
+        onboarding = OnboardingModel(services: services, health: health, team: team, startAt: step,
+                                     inviteCode: pendingInviteCode) { [weak self] in
+            self?.finishOnboarding()
+        }
+        pendingInviteCode = nil
+        phase = .onboarding
+    }
+
+    func finishOnboarding() {
+        UserDefaults.standard.set(true, forKey: Self.onboardingCompleteKey)
+        onboarding = nil
+        selectedTab = .today
+        phase = .main
+        Task { await team.refresh(today: health.today) }
+    }
+
+    /// Handles `<scheme>://join/CODE` links from invites.
+    func open(_ url: URL) {
+        guard let code = DeepLink.inviteCode(from: url) else { return }
+        if phase == .onboarding, let onboarding {
+            onboarding.inviteCode = code
+            if onboarding.step == .group { Task { await onboarding.lookUpInviteCode() } }
+        } else {
+            pendingInviteCode = code
+            if phase == .main { selectedTab = .team }
+        }
+    }
+
+    func signOut() async {
+        await services.backend.signOut()
+        await services.google?.session.signOut()
+        await health.reset()
+        UserDefaults.standard.set(false, forKey: Self.onboardingCompleteKey)
+        beginOnboarding(at: .welcome)
+    }
+
+    func deleteAccount() async throws {
+        try await services.backend.deleteAccount()
+        await signOut()
+    }
+
+    /// Signs in to Google again after the connection expired (the friends account stays signed in).
+    func reconnectGoogle(authenticate: OnboardingModel.Authenticate) async {
+        guard let google = services.google else { return }
+        do {
+            let request = google.makeRequest()
+            let callback = try await authenticate(request.url, google.callbackScheme)
+            _ = try await google.complete(callback: callback, request: request)
+            await refresh()
+        } catch {
+            // Leave the reconnect banner up; the user can try again.
+        }
+    }
+}
+
+/// Invite links: `<scheme>://join/CODE`.
+nonisolated enum DeepLink {
+    static func inviteCode(from url: URL) -> String? {
+        let parts = ([url.host ?? ""] + url.pathComponents).filter { !$0.isEmpty && $0 != "/" }
+        guard parts.count == 2, parts[0].lowercased() == "join", InviteCode.isComplete(parts[1]) else { return nil }
+        return InviteCode.normalize(parts[1])
     }
 }
