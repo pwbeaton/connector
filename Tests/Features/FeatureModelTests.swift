@@ -115,6 +115,31 @@ struct LeaderboardTests {
     }
 }
 
+struct PromotionTests {
+    func model(lastSeen: Tier?) async -> HealthModel {
+        let defaults = UserDefaults(suiteName: "promotion-\(UUID().uuidString)")!
+        if let lastSeen { defaults.set(lastSeen.rawValue, forKey: HealthModel.lastSeenTierKey) }
+        let model = HealthModel(services: .demo(), defaults: defaults)
+        await model.sync()
+        return model
+    }
+
+    @Test func aHigherTierIsCelebratedOnce() async {
+        let health = await model(lastSeen: .rookie)
+        let tier = health.snapshot.tier.tier
+        #expect(tier > .rookie, "demo data reaches at least Bronze")
+        #expect(health.promotion == tier)
+        health.promotion = nil
+        await health.load()
+        #expect(health.promotion == nil, "the same tier isn't celebrated twice")
+    }
+
+    @Test func theFirstLaunchJustRemembersTheTier() async {
+        let health = await model(lastSeen: nil)
+        #expect(health.promotion == nil)
+    }
+}
+
 struct WeeklyRecapTests {
     @Test func summarizesTheWeekWithoutCountingMissingDays() {
         let monday = CivilDate(year: 2026, month: 10, day: 26)

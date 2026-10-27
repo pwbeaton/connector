@@ -38,6 +38,7 @@ struct TodayView: View {
         }
         .background(Theme.background.ignoresSafeArea())
         .refreshable { await session.refresh() }
+        .sensoryFeedback(.success, trigger: health.promotion) { _, new in new != nil }
     }
 
     private var header: some View {
@@ -64,6 +65,12 @@ struct TodayView: View {
     }
 
     @ViewBuilder private var banners: some View {
+        if let tier = health.promotion {
+            Banner(symbol: "shield.fill", message: "Promoted to \(tier.title)! Four weeks of consistency earned it.",
+                   color: tier.color, actionTitle: "Nice") {
+                health.promotion = nil
+            }
+        }
         if health.needsReconnect {
             Banner(symbol: "link.badge.plus", message: "Your Fitbit connection expired.", color: Theme.recoveryRest,
                    actionTitle: "Reconnect") {

@@ -81,7 +81,9 @@ final class AppSession {
     init(services: AppServices, options: LaunchOptions) {
         self.services = services
         self.options = options
-        health = HealthModel(services: services)
+        // Demo mode keeps its own settings so it never affects the real account's.
+        health = HealthModel(services: services,
+                             defaults: services.isDemo ? UserDefaults(suiteName: "demo") ?? .standard : .standard)
         team = TeamModel(services: services)
         // The leaderboard opens on this week's group challenge.
         team.leaderboardMetric = LeaderboardMetric(Challenges.group(for: CivilDate.today().weekStart))

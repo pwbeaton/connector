@@ -9,11 +9,16 @@ final class HealthModel {
     private(set) var snapshot: EngineSnapshot
     private(set) var isSyncing = false
     private(set) var lastReport: SyncReport?
+    /// Set when the training tier went up since the app last showed it (a moment to celebrate).
+    var promotion: Tier?
 
     private let services: AppServices
+    private let defaults: UserDefaults
+    static let lastSeenTierKey = "lastSeenTier"
 
-    init(services: AppServices) {
+    init(services: AppServices, defaults: UserDefaults = .standard) {
         self.services = services
+        self.defaults = defaults
         snapshot = Engine.run(records: [], goals: Goals(), today: .today())
     }
 
@@ -39,6 +44,16 @@ final class HealthModel {
     func load() async {
         state = await services.store.load()
         snapshot = Engine.run(records: state.records, goals: state.goals, today: .today())
+        checkForPromotion()
+    }
+
+    /// Compares the tier with the last one shown. The first time, it just remembers it.
+    private func checkForPromotion() {
+        guard hasData, !snapshot.tier.isCalibrating else { return }
+        let tier = snapshot.tier.tier
+        let lastSeen = defaults.string(forKey: Self.lastSeenTierKey).flatMap(Tier.init(rawValue:))
+        if let lastSeen, tier > lastSeen { promotion = tier }
+        defaults.set(tier.rawValue, forKey: Self.lastSeenTierKey)
     }
 
     /// Pulls fresh data from the tracker (via Google Health) and shares the daily summaries.
@@ -62,7 +77,9 @@ final class HealthModel {
     /// Forgets everything on the phone (sign-out or account deletion).
     func reset() async {
         try? await services.store.reset()
+        defaults.removeObject(forKey: Self.lastSeenTierKey)
         lastReport = nil
+        promotion = nil
         await load()
     }
 
