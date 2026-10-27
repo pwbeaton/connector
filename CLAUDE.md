@@ -72,6 +72,7 @@ xcodebuild build-for-testing -project App.xcodeproj -scheme App \
 xcodebuild test-without-building -project App.xcodeproj -scheme App \
   -destination "platform=iOS Simulator,id=$UDID" CODE_SIGNING_ALLOWED=NO   # no -quiet: it hides test results
 scripts/screenshots.sh <App.app> <out-dir>  # demo-mode screenshots (CI publishes them to the ci-screenshots branch)
+scripts/linux-check.sh                      # cloud sessions: compile + test Engine/Google/Sync on Linux (Docker swift:6.2)
 
 supabase start | supabase db start          # local stack / Postgres only (needs Docker)
 supabase db reset                           # re-apply migrations + seed.sql
@@ -95,6 +96,7 @@ Demo mode: launch with `-demo YES` (add `-screen <name> -screenshots YES` to ope
 - **2026-10-27 · Leaderboards and sharing.** Sharing is by category (recovery | sleep | activity) per group. Leaderboards never include Recovery, HRV, or resting HR.
 - **2026-10-27 · No server jobs in V1.** Weekly challenges are deterministic from the ISO week. Push notifications come in V1.1.
 - **2026-09-30 · Build environment.** Cloud sessions run on Linux with no Xcode, so iOS builds and tests run in GitHub Actions (free: the repo is public). Docker isn't running at start (`dockerd &`). Supabase CLI: `npm install -g supabase@2.118.0`.
+- **2026-10-27 · Linux Swift check.** `scripts/linux-check.sh` mirrors every file that doesn't import an Apple-only framework into `.linux-check/` (git-ignored) and runs `swift test` in Docker `swift:6.2-noble` (needs `--network host` and the proxy CA). Keep Apple-only code (Keychain, SwiftUI, Supabase) in separate files so the rest stays checkable. It caught a test isolation error CI would have hit.
 - **2026-09-30 · Local Supabase in cloud sessions.** `public.ecr.aws` and GHCR's blob host are blocked, Docker Hub is often rate-limited, and port 54322 is taken (`SUPABASE_DB_PORT=55322`). Fallback: run the cached `supabase/postgres` image directly, add stand-ins for the Auth/Storage tables and the current `auth.uid()`, and run test files with psql. CI is the authority.
 - **2026-09-30 · Swift setup.** The module is named `App`, so write `SwiftUI.App`. The widget target is `WidgetExtension`. Mark plain data types and pure helpers `nonisolated` so they work off the main actor.
 - **2026-09-30 · supabase-swift 2.55.3 API.** `auth.signInWithIdToken(credentials: OpenIDConnectCredentials(provider:, idToken:, nonce:))`. The client uses `emitLocalSessionAsInitialSession: true`. Sign out with `scope: .local`. `update(...)` is `throws` (not async).

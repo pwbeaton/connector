@@ -22,3 +22,4 @@ supabase/.env
 
 # macOS
 .DS_Store
+.linux-check/

@@ -55,7 +55,7 @@ func validTokens(expiresIn seconds: TimeInterval = 3600, refresh: String? = "ref
                  grantedScopes: Set(GoogleScopes.all), idToken: "id-token")
 }
 
-extension URLRequest {
+nonisolated extension URLRequest {
     var bodyString: String { httpBody.map { String(decoding: $0, as: UTF8.self) } ?? "" }
 
     func queryValue(_ name: String) -> String? {
