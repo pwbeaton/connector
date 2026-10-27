@@ -115,6 +115,24 @@ struct LeaderboardTests {
     }
 }
 
+struct WeeklyRecapTests {
+    @Test func summarizesTheWeekWithoutCountingMissingDays() {
+        let monday = CivilDate(year: 2026, month: 10, day: 26)
+        var records = DemoData.records(endingOn: monday.adding(days: 3), days: 40)
+        records.removeAll { $0.date == monday.adding(days: 1) }  // Tuesday not worn
+        let snapshot = Engine.run(records: records, goals: Goals(), today: monday.adding(days: 3))
+        let recap = WeeklyRecap.make(snapshot: snapshot, records: records, weekStart: monday)
+
+        let week = records.filter { $0.date >= monday }
+        #expect(week.count == 3)
+        #expect(recap.steps == week.compactMap(\.steps).reduce(0, +))
+        let sleeps = week.compactMap { $0.sleep?.minutesAsleep }
+        #expect(recap.averageSleepMinutes == Int((Double(sleeps.reduce(0, +)) / Double(sleeps.count)).rounded()))
+        #expect(recap.goalsPossible <= 9)
+        #expect(recap.challengesTotal == 3)
+    }
+}
+
 struct SmallHelperTests {
     @Test func inviteLinks() {
         #expect(DeepLink.inviteCode(from: URL(string: "connector://join/camp2345")!) == "CAMP2345")

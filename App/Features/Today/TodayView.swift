@@ -24,6 +24,10 @@ struct TodayView: View {
                 ChallengesSection(challenges: health.snapshot.challenges, group: health.snapshot.groupChallenge) {
                     session.selectedTab = .team
                 }
+                if health.hasData {
+                    ShareWeekButton(recap: WeeklyRecap.make(snapshot: health.snapshot, records: health.records,
+                                                            weekStart: health.today.weekStart))
+                }
                 Text("Scores are estimates to guide training, not medical advice.")
                     .font(.caption)
                     .foregroundStyle(Theme.textSecondary)
