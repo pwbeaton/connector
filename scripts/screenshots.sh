@@ -41,7 +41,8 @@ capture_on() {
     for screen in $SCREENS; do
       xcrun simctl launch --terminate-running-process "$udid" "$BUNDLE_ID" \
         -demo YES -screen "$screen" -screenshots YES > /dev/null
-      sleep 4
+      # Launch, demo sync, and first layout; 4 s was sometimes too short on a freshly booted simulator.
+      sleep 7
       xcrun simctl io "$udid" screenshot --type=png "$OUT/$label-$appearance-$screen.png" > /dev/null
       echo "   $label-$appearance-$screen.png"
     done

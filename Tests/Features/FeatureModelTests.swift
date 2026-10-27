@@ -88,6 +88,13 @@ struct DemoFlowTests {
         let session = AppSession(services: .demo(today: today), options: LaunchOptions(isDemo: true, screen: "trends"))
         await session.start()
         #expect(session.selectedTab == .trends)
+        #expect(!session.options.startsAtBottom)
+    }
+
+    @Test func bottomScreensOpenTheTabScrolledDown() {
+        let options = LaunchOptions(isDemo: true, screen: "profile-bottom")
+        #expect(options.tabScreen == .profile)
+        #expect(options.startsAtBottom)
     }
 }
 

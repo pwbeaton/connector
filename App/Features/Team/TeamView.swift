@@ -33,6 +33,7 @@ struct TeamView: View {
             }
             .padding(Theme.screenPadding)
         }
+        .defaultScrollAnchor(session.options.startsAtBottom ? .bottom : .top)
         .background(Theme.background.ignoresSafeArea())
         .refreshable { await session.refresh() }
     }

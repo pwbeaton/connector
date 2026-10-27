@@ -55,6 +55,16 @@ enum MainTab: String, CaseIterable, Hashable {
     case today, team, trends, profile
 }
 
+extension LaunchOptions {
+    /// The tab named by `-screen` ("today", or "today-bottom" to open scrolled to the end).
+    var tabScreen: MainTab? {
+        screen.flatMap { MainTab(rawValue: $0.replacingOccurrences(of: "-bottom", with: "")) }
+    }
+
+    /// Screenshots of the lower half of a tab use `-screen <tab>-bottom`.
+    var startsAtBottom: Bool { screen?.hasSuffix("-bottom") == true }
+}
+
 /// One run of the app with its services: onboarding, then the four tabs.
 @Observable
 final class AppSession {
@@ -109,7 +119,7 @@ final class AppSession {
         } else if !finished {
             beginOnboarding(at: .device)
         } else {
-            if let tab = options.screen.flatMap(MainTab.init(rawValue:)) { selectedTab = tab }
+            if let tab = options.tabScreen { selectedTab = tab }
             phase = .main
             await refresh()
         }

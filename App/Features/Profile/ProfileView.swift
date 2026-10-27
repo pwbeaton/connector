@@ -29,6 +29,7 @@ struct ProfileView: View {
             }
             .padding(Theme.screenPadding)
         }
+        .defaultScrollAnchor(session.options.startsAtBottom ? .bottom : .top)
         .background(Theme.background.ignoresSafeArea())
         .confirmationDialog("Delete your account?", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("Delete account", role: .destructive) { Task { try? await session.deleteAccount() } }

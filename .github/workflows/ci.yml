@@ -86,7 +86,7 @@ jobs:
     permissions:
       contents: write
     env:
-      SCREENS: "welcome device goals group sharing today team trends profile"
+      SCREENS: "welcome device goals group sharing today today-bottom team team-bottom trends trends-bottom profile profile-bottom"
     steps:
       - uses: actions/checkout@v6
 

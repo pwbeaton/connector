@@ -36,6 +36,7 @@ struct TodayView: View {
             }
             .padding(Theme.screenPadding)
         }
+        .defaultScrollAnchor(session.options.startsAtBottom ? .bottom : .top)
         .background(Theme.background.ignoresSafeArea())
         .refreshable { await session.refresh() }
         .sensoryFeedback(.success, trigger: health.promotion) { _, new in new != nil }

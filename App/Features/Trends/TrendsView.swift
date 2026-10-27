@@ -54,6 +54,7 @@ struct TrendsView: View {
             }
             .padding(Theme.screenPadding)
         }
+        .defaultScrollAnchor(session.options.startsAtBottom ? .bottom : .top)
         .background(Theme.background.ignoresSafeArea())
     }
 }
@@ -133,10 +134,20 @@ struct TrendCard: View {
         }
         .chartYScale(domain: yDomain)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: range == 7 ? 7 : 5)) { _ in
+            AxisMarks(values: xTicks) { _ in
                 AxisValueLabel(format: range == 7 ? .dateTime.weekday(.narrow) : .dateTime.month(.abbreviated).day())
             }
         }
+    }
+
+    /// Every day for a week, else evenly spaced dates that stop short of the right edge (so no label is cut off).
+    private var xTicks: [Date] {
+        guard let first = points.first?.date, let last = points.last?.date else { return [] }
+        let step = range == 7 ? 1 : (range == 30 ? 7 : 21)
+        return stride(from: 0, through: first.days(until: last), by: step)
+            .map { first.adding(days: $0) }
+            .filter { range == 7 || $0.days(until: last) >= step / 2 }
+            .map(\.noon)
     }
 
     private var yDomain: ClosedRange<Double> {
