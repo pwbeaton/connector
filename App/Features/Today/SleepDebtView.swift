@@ -41,21 +41,23 @@ struct TonightCard: View {
                 .background(Theme.sleep.opacity(0.15), in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 3) {
-                Text("Tonight").sectionLabel()
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text("Bed by").font(.subheadline).foregroundStyle(Theme.textSecondary)
-                    Text(Format.clock(minuteOfDay: plan.bedtime))
-                        .font(.scoreNumber(26))
-                        .foregroundStyle(Theme.textPrimary)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                }
+                Text("Tonight · bed by").sectionLabel()
+                    .lineLimit(1)
+                // The time never truncates: it keeps its full width and the rest of the row gives way.
+                Text(Format.clock(minuteOfDay: plan.bedtime))
+                    .font(.scoreNumber(26))
+                    .foregroundStyle(Theme.textPrimary)
+                    .fixedSize()
                 if let shift = BedtimeFormat.shift(plan.shiftFromUsual) {
                     Label(shift, systemImage: BedtimeFormat.shiftSymbol(plan.shiftFromUsual))
                         .labelStyle(TightLabelStyle())
                         .font(.caption.weight(.semibold))
                         .foregroundStyle(Theme.sleep)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            .layoutPriority(1)
             Spacer(minLength: 8)
             if let debt {
                 VStack(alignment: .trailing, spacing: 3) {
@@ -65,6 +67,8 @@ struct TonightCard: View {
                         .foregroundStyle(debt.level.color)
                     Text(debt.level.title).font(.caption).foregroundStyle(Theme.textSecondary)
                 }
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
             }
             CardChevron()
         }
