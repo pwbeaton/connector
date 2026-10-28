@@ -7,7 +7,10 @@ struct RootView: View {
     var body: some View {
         Group {
             if let session = model.session {
+                // A new identity per session, so switching to or from sample data starts the
+                // new session (its .task) and resets screen state instead of reusing the old view.
                 SessionView(session: session)
+                    .id(ObjectIdentifier(session))
             } else if case .setupNeeded(let reason) = model.mode {
                 SetupNeededView(reason: reason) { model.enterDemo() }
             }
