@@ -9,6 +9,8 @@ final class HealthModel {
     private(set) var snapshot: EngineSnapshot
     private(set) var isSyncing = false
     private(set) var lastReport: SyncReport?
+    /// Biological age for every day with enough data (recomputed on each load).
+    private(set) var biologicalAges: [CivilDate: BiologicalAgeResult] = [:]
     /// Set when the training tier went up since the app last showed it (a moment to celebrate).
     var promotion: Tier?
 
@@ -44,6 +46,8 @@ final class HealthModel {
     func load() async {
         state = await services.store.load()
         snapshot = Engine.run(records: state.records, goals: state.goals, today: .today())
+        biologicalAges = BiologicalAge.timeline(records: state.records, age: chronologicalAge, sex: state.sex,
+                                                today: snapshot.today)
         checkForPromotion()
     }
 
@@ -80,6 +84,65 @@ final class HealthModel {
         defaults.removeObject(forKey: Self.lastSeenTierKey)
         lastReport = nil
         promotion = nil
+        await load()
+    }
+
+    // MARK: Day pages
+
+    /// Every day you can swipe back to: from the first synced day (at most 90 days ago) through today.
+    var browsableDates: [CivilDate] {
+        let earliest = today.adding(days: -(SyncEngine.backfillDays - 1))
+        let first = max(earliest, state.records.first?.date ?? today)
+        return first.through(today)
+    }
+
+    func record(on date: CivilDate) -> DayRecord? {
+        state.records.last { $0.date == date }
+    }
+
+    func scores(on date: CivilDate) -> DayScores? {
+        snapshot.scores(on: date)
+    }
+
+    /// Change in a score from the day before `date`.
+    func dayChange(_ kind: ScoreKind, on date: CivilDate) -> Int? {
+        ScoreTrend.dayChange(kind, on: date, scores: snapshot.days)
+    }
+
+    func weekComparison(_ kind: ScoreKind, endingOn date: CivilDate) -> ScoreTrend.WeekComparison? {
+        ScoreTrend.weekComparison(kind, endingOn: date, scores: snapshot.days)
+    }
+
+    /// Tonight's sleep tip, based on the night that ended on `date`.
+    func sleepTip(on date: CivilDate) -> SleepTip? {
+        guard let sleep = record(on: date)?.sleep, let score = scores(on: date)?.sleep else { return nil }
+        let recent = state.records.filter { $0.date < date && $0.date >= date.adding(days: -7) }.compactMap(\.sleep)
+        return SleepTip.make(sleep: sleep, score: score, goalMinutes: goals.sleepMinutes,
+                             recentWakeMinutes: recent.map(\.wakeMinuteOfDay),
+                             recentAwakeMinutes: recent.map { max(0, $0.minutesInBed - $0.minutesAsleep) })
+    }
+
+    // MARK: Biological age
+
+    /// The age biological age is compared with: what you typed in, else your Google Health profile age.
+    var chronologicalAge: Int? { state.ageOverride ?? state.profileAge }
+    var profileAge: Int? { state.profileAge }
+    var sex: BiologicalSex? { state.sex }
+
+    func biologicalAge(on date: CivilDate) -> BiologicalAgeResult? {
+        biologicalAges[date]
+    }
+
+    func biologicalAgeTrend(on date: CivilDate) -> BiologicalAgeTrend? {
+        BiologicalAge.trend(on: date, in: biologicalAges)
+    }
+
+    /// Saves the age and sex used for biological age (nil age falls back to the profile age).
+    func updateBiologicalAgeSettings(ageOverride: Int?, sex: BiologicalSex?) async {
+        _ = try? await services.store.update { state in
+            state.ageOverride = ageOverride
+            state.sex = sex
+        }
         await load()
     }
 

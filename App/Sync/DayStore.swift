@@ -16,6 +16,12 @@ nonisolated struct LocalState: Codable, Equatable, Sendable {
     var uploaded: [String: String] = [:]
     /// The Supabase user these records belong to; a different account starts fresh.
     var accountID: String?
+    /// Age from the Google Health profile, refreshed each sync (for biological age).
+    var profileAge: Int?
+    /// An age the user typed in, which wins over the profile age.
+    var ageOverride: Int?
+    /// Sex for the fitness norms behind biological age; nil uses the average of both.
+    var sex: BiologicalSex?
 
     /// Replaces every record in `range` with `fresh` (days without data drop out).
     mutating func replaceRecords(in range: ClosedRange<CivilDate>, with fresh: [DayRecord]) {

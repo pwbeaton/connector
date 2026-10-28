@@ -5,9 +5,12 @@ import Foundation
 nonisolated struct BadgeDefinition: Sendable, Identifiable {
     let id: String
     let title: String
+    /// How to earn it, in a few words.
     let detail: String
     /// SF Symbol name.
     let symbol: String
+    /// Why it's worth chasing, in a sentence (shown when you tap the badge).
+    var why: String = ""
 }
 
 nonisolated struct EarnedBadge: Codable, Equatable, Sendable, Identifiable {
@@ -19,26 +22,46 @@ nonisolated struct EarnedBadge: Codable, Equatable, Sendable, Identifiable {
 
 nonisolated enum Badges {
     static let all: [BadgeDefinition] = [
-        BadgeDefinition(id: "day-one", title: "Day One", detail: "Synced your first day", symbol: "flag.fill"),
-        BadgeDefinition(id: "calibrated", title: "Calibrated", detail: "7 nights of HRV: Recovery unlocked", symbol: "dial.medium.fill"),
-        BadgeDefinition(id: "first-10k", title: "First 10K", detail: "10,000 steps in a day", symbol: "figure.walk"),
-        BadgeDefinition(id: "20k-club", title: "20K Club", detail: "20,000 steps in a day", symbol: "figure.walk.motion"),
-        BadgeDefinition(id: "10k-week", title: "10K Week", detail: "10,000+ steps 7 days in a row", symbol: "calendar.badge.checkmark"),
-        BadgeDefinition(id: "marathon-day", title: "Marathon Day", detail: "26.2 miles in a day", symbol: "medal.fill"),
-        BadgeDefinition(id: "100-mile-month", title: "100-Mile Month", detail: "100 miles in 30 days", symbol: "map.fill"),
-        BadgeDefinition(id: "heart-healthy-week", title: "Heart Healthy", detail: "150 Active Zone Minutes in a week", symbol: "heart.fill"),
-        BadgeDefinition(id: "zone-master", title: "Zone Master", detail: "300 Active Zone Minutes in a week", symbol: "bolt.heart.fill"),
-        BadgeDefinition(id: "full-tank", title: "Full Tank", detail: "8 hours asleep in one night", symbol: "bed.double.fill"),
-        BadgeDefinition(id: "iron-week", title: "Iron Week", detail: "Sleep goal every night for a week", symbol: "moon.stars.fill"),
-        BadgeDefinition(id: "in-the-green", title: "In the Green", detail: "Go recovery 3 days in a row", symbol: "arrow.up.heart.fill"),
-        BadgeDefinition(id: "bounce-back", title: "Bounce Back", detail: "From Recover to Go overnight", symbol: "arrow.uturn.up"),
-        BadgeDefinition(id: "dialed-in", title: "Dialed In", detail: "Effort on target 5 days in a week", symbol: "scope"),
-        BadgeDefinition(id: "on-a-roll", title: "On a Roll", detail: "A 7-day streak", symbol: "flame.fill"),
-        BadgeDefinition(id: "unbreakable", title: "Unbreakable", detail: "A 30-day streak", symbol: "flame.circle.fill"),
-        BadgeDefinition(id: "silver-tier", title: "Silver Tier", detail: "Reached Silver consistency", symbol: "shield.lefthalf.filled"),
-        BadgeDefinition(id: "gold-tier", title: "Gold Tier", detail: "Reached Gold consistency", symbol: "shield.fill"),
-        BadgeDefinition(id: "platinum-tier", title: "Platinum Tier", detail: "Reached Platinum consistency", symbol: "shield.checkered"),
-        BadgeDefinition(id: "elite-tier", title: "Elite Tier", detail: "Reached Elite consistency", symbol: "crown.fill"),
+        BadgeDefinition(id: "day-one", title: "Day One", detail: "Synced your first day", symbol: "flag.fill",
+                        why: "Everything starts here. Your first synced day sets up your scores, streaks, and trends."),
+        BadgeDefinition(id: "calibrated", title: "Calibrated", detail: "7 nights of HRV: Recovery unlocked", symbol: "dial.medium.fill",
+                        why: "Recovery compares each night's HRV with your own 30-day normal, so it needs a week of nights to learn what normal looks like for you."),
+        BadgeDefinition(id: "first-10k", title: "First 10K", detail: "10,000 steps in a day", symbol: "figure.walk",
+                        why: "10,000 steps is a classic daily benchmark. Most of the health benefit of walking arrives by 8,000 to 10,000 steps a day."),
+        BadgeDefinition(id: "20k-club", title: "20K Club", detail: "20,000 steps in a day", symbol: "figure.walk.motion",
+                        why: "Twice the classic benchmark in one day, usually a long hike, a big city day, or a run plus walking."),
+        BadgeDefinition(id: "10k-week", title: "10K Week", detail: "10,000+ steps 7 days in a row", symbol: "calendar.badge.checkmark",
+                        why: "Consistency beats one-off big days. Seven straight days of 10,000+ steps shows a real habit."),
+        BadgeDefinition(id: "marathon-day", title: "Marathon Day", detail: "26.2 miles in a day", symbol: "medal.fill",
+                        why: "Covering 42.2 km (26.2 miles) in a single day, by running, walking, or both."),
+        BadgeDefinition(id: "100-mile-month", title: "100-Mile Month", detail: "100 miles in 30 days", symbol: "map.fill",
+                        why: "About 3.3 miles (5.4 km) a day for a month. Steady movement adds up."),
+        BadgeDefinition(id: "heart-healthy-week", title: "Heart Healthy", detail: "150 Active Zone Minutes in a week", symbol: "heart.fill",
+                        why: "150 Active Zone Minutes a week is the World Health Organization's minimum for heart health. Vigorous minutes count double."),
+        BadgeDefinition(id: "zone-master", title: "Zone Master", detail: "300 Active Zone Minutes in a week", symbol: "bolt.heart.fill",
+                        why: "Twice the WHO minimum. Research shows the drop in mortality risk keeps growing up to about 300 minutes a week."),
+        BadgeDefinition(id: "full-tank", title: "Full Tank", detail: "8 hours asleep in one night", symbol: "bed.double.fill",
+                        why: "Eight hours of actual sleep, not just time in bed. Long nights pay down sleep debt and refill deep and REM sleep."),
+        BadgeDefinition(id: "iron-week", title: "Iron Week", detail: "Sleep goal every night for a week", symbol: "moon.stars.fill",
+                        why: "Hitting your sleep goal all seven nights of a Monday-to-Sunday week. Sleep regularity predicts long-term health better than any single long night."),
+        BadgeDefinition(id: "in-the-green", title: "In the Green", detail: "Go recovery 3 days in a row", symbol: "arrow.up.heart.fill",
+                        why: "Three Go mornings in a row (Recovery 67+) means training, sleep, and rest are in balance."),
+        BadgeDefinition(id: "bounce-back", title: "Bounce Back", detail: "From Recover to Go overnight", symbol: "arrow.uturn.up",
+                        why: "A Recover morning (33 or less) followed by a Go morning (67+). It shows that rest after a hard day works."),
+        BadgeDefinition(id: "dialed-in", title: "Dialed In", detail: "Effort on target 5 days in a week", symbol: "scope",
+                        why: "Landing inside your Effort target on 5 days of one week: pushing on Go days and easing off on Recover days."),
+        BadgeDefinition(id: "on-a-roll", title: "On a Roll", detail: "A 7-day streak", symbol: "flame.fill",
+                        why: "Seven days in a row on any streak (sleep goal, step goal, or Effort on target). It also earns your first rest shield."),
+        BadgeDefinition(id: "unbreakable", title: "Unbreakable", detail: "A 30-day streak", symbol: "flame.circle.fill",
+                        why: "30 days in a row on any streak. Rest shields can cover the odd missed day along the way."),
+        BadgeDefinition(id: "silver-tier", title: "Silver Tier", detail: "Reached Silver consistency", symbol: "shield.lefthalf.filled",
+                        why: "Silver means you hit 55% or more of your sleep, step, and Effort goals over the last 28 days."),
+        BadgeDefinition(id: "gold-tier", title: "Gold Tier", detail: "Reached Gold consistency", symbol: "shield.fill",
+                        why: "Gold means 70% or more of your goals over 28 days, a very consistent month."),
+        BadgeDefinition(id: "platinum-tier", title: "Platinum Tier", detail: "Reached Platinum consistency", symbol: "shield.checkered",
+                        why: "Platinum means 82% or more of your goals over 28 days."),
+        BadgeDefinition(id: "elite-tier", title: "Elite Tier", detail: "Reached Elite consistency", symbol: "crown.fill",
+                        why: "Elite means 92% or more of your goals over 28 days, the top tier."),
     ]
 
     /// Every badge earned so far, with the first day it was earned.

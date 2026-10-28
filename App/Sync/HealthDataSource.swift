@@ -52,6 +52,12 @@ nonisolated protocol HealthDataSource: Sendable {
     func fetch(from start: CivilDate, through end: CivilDate) async throws -> HealthFetchResult
     /// The paired tracker, or nil if none (or the settings scope wasn't granted).
     func device() async throws -> DeviceStatus?
+    /// The user's age in years from their Google Health profile (for biological age).
+    func profileAge() async throws -> Int?
+}
+
+nonisolated extension HealthDataSource {
+    func profileAge() async throws -> Int? { nil }
 }
 
 /// Reads the Fitbit Air's data from the Google Health API (about 8 calls per sync).
@@ -129,6 +135,14 @@ nonisolated struct GoogleHealthSource: HealthDataSource {
     func device() async throws -> DeviceStatus? {
         do {
             return DeviceStatus(devices: try await client.pairedDevices())
+        } catch GoogleHealthError.missingScope {
+            return nil
+        }
+    }
+
+    func profileAge() async throws -> Int? {
+        do {
+            return try await client.profile().age
         } catch GoogleHealthError.missingScope {
             return nil
         }

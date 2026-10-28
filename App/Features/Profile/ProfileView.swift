@@ -241,34 +241,112 @@ struct TierCard: View {
 
 struct BadgesSection: View {
     let earned: [EarnedBadge]
+    @State private var selected: BadgeDefinition?
 
     private let columns = [GridItem(.adaptive(minimum: 76), spacing: 12)]
 
     var body: some View {
-        let earnedIDs = Set(earned.map(\.id))
+        let earnedDates = Dictionary(earned.map { ($0.id, $0.earnedOn) }, uniquingKeysWith: { first, _ in first })
         VStack(alignment: .leading, spacing: 8) {
-            SectionTitle("Badges", trailing: "\(earnedIDs.count) of \(Badges.all.count)")
-            LazyVGrid(columns: columns, spacing: 14) {
-                ForEach(Badges.all) { badge in
-                    let isEarned = earnedIDs.contains(badge.id)
-                    VStack(spacing: 6) {
-                        Image(systemName: badge.symbol)
-                            .font(.title2)
-                            .foregroundStyle(isEarned ? Theme.gold : Theme.textSecondary.opacity(0.4))
-                            .frame(width: 52, height: 52)
-                            .background(isEarned ? Theme.gold.opacity(0.14) : Theme.surfaceRaised, in: Circle())
-                        Text(badge.title)
-                            .font(.caption2.weight(.semibold))
-                            .foregroundStyle(isEarned ? Theme.textPrimary : Theme.textSecondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .minimumScaleFactor(0.8)
+            SectionTitle("Badges", trailing: "\(earnedDates.count) of \(Badges.all.count)")
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Badges mark milestones in sleep, activity, recovery, and consistency. Gold ones are earned; tap any badge to see what it takes.")
+                    .font(.caption).foregroundStyle(Theme.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                LazyVGrid(columns: columns, spacing: 14) {
+                    ForEach(Badges.all) { badge in
+                        let isEarned = earnedDates[badge.id] != nil
+                        Button { selected = badge } label: {
+                            VStack(spacing: 6) {
+                                BadgeIcon(badge: badge, isEarned: isEarned, size: 52)
+                                Text(badge.title)
+                                    .font(.caption2.weight(.semibold))
+                                    .foregroundStyle(isEarned ? Theme.textPrimary : Theme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.8)
+                                Text(badge.detail)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.textSecondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(2)
+                                    .minimumScaleFactor(0.85)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.pressableCard)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("\(badge.title), \(isEarned ? "earned" : "locked"): \(badge.detail)")
+                        .accessibilityHint("Shows what this badge means")
                     }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("\(badge.title), \(isEarned ? "earned" : "locked"): \(badge.detail)")
                 }
             }
             .card()
         }
+        .sheet(item: $selected) { badge in
+            BadgeDetailSheet(badge: badge, earnedOn: earnedDates[badge.id])
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Theme.background)
+        }
+    }
+}
+
+struct BadgeIcon: View {
+    let badge: BadgeDefinition
+    let isEarned: Bool
+    var size: CGFloat = 52
+
+    var body: some View {
+        Image(systemName: badge.symbol)
+            .font(.system(size: size * 0.42))
+            .foregroundStyle(isEarned ? Theme.gold : Theme.textSecondary.opacity(0.4))
+            .frame(width: size, height: size)
+            .background(isEarned ? Theme.gold.opacity(0.14) : Theme.surfaceRaised, in: Circle())
+            .overlay(alignment: .bottomTrailing) {
+                if !isEarned {
+                    Image(systemName: "lock.fill")
+                        .font(.system(size: size * 0.18, weight: .bold))
+                        .foregroundStyle(Theme.textSecondary)
+                        .padding(size * 0.08)
+                        .background(Theme.surface, in: Circle())
+                }
+            }
+    }
+}
+
+/// What a badge means, how to earn it, and when you did.
+struct BadgeDetailSheet: View {
+    let badge: BadgeDefinition
+    let earnedOn: CivilDate?
+
+    var body: some View {
+        VStack(spacing: 16) {
+            BadgeIcon(badge: badge, isEarned: earnedOn != nil, size: 88)
+                .padding(.top, 28)
+            VStack(spacing: 6) {
+                Text(badge.title).font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+                Label(earnedOn.map { "Earned \($0.noon.formatted(.dateTime.month(.wide).day().year()))" } ?? "Not earned yet",
+                      systemImage: earnedOn == nil ? "lock.fill" : "checkmark.seal.fill")
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(earnedOn == nil ? Theme.textSecondary : Theme.gold)
+            }
+            VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("How to earn it").sectionLabel()
+                    Text(badge.detail + ".").font(.body).foregroundStyle(Theme.textPrimary)
+                }
+                if !badge.why.isEmpty {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Why it matters").sectionLabel()
+                        Text(badge.why).font(.subheadline).foregroundStyle(Theme.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            .card()
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, Theme.screenPadding)
     }
 }

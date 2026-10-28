@@ -91,6 +91,7 @@ actor SyncEngine {
             return SyncReport(status: Self.status(for: error))
         }
         let device = try? await source.device()
+        let age = try? await source.profileAge()
 
         var state: LocalState
         do {
@@ -100,6 +101,7 @@ actor SyncEngine {
                 state.lastSyncAt = now
                 state.missingCategories = fetched.missing
                 if let device { state.device = device }
+                if let age { state.profileAge = age }
             }
         } catch {
             return SyncReport(status: .failed("Couldn't save your data on this iPhone."))

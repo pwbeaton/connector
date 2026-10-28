@@ -177,6 +177,60 @@ struct SectionTitle: View {
     }
 }
 
+/// "▲ 6 vs yesterday": a score's change, green when it went up and red when it went down.
+/// Pass `tint` to use one color for both directions (Effort: more isn't always better).
+struct ChangeLabel: View {
+    let change: Int?
+    var caption = "vs yesterday"
+    var tint: Color?
+
+    var body: some View {
+        if let change {
+            HStack(spacing: 3) {
+                Image(systemName: change > 0 ? "arrowtriangle.up.fill" : (change < 0 ? "arrowtriangle.down.fill" : "equal"))
+                    .font(.system(size: 8, weight: .bold))
+                Text(change == 0 ? "Same" : "\(abs(change))").monospacedDigit()
+                Text(caption).foregroundStyle(Theme.textSecondary).fontWeight(.regular)
+            }
+            .font(.caption.weight(.semibold))
+            .foregroundStyle(color(change))
+            .lineLimit(1)
+            .minimumScaleFactor(0.8)
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(change == 0 ? "Same as yesterday" : "\(change > 0 ? "Up" : "Down") \(abs(change)) \(caption)")
+        }
+    }
+
+    private func color(_ change: Int) -> Color {
+        if change == 0 { return Theme.textSecondary }
+        if let tint { return tint }
+        return change > 0 ? Theme.recoveryGo : Theme.recoveryRest
+    }
+}
+
+/// Cards that open a detail screen shrink a touch while pressed.
+struct PressableCardStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.97 : 1)
+            .animation(.spring(duration: 0.25, bounce: 0.2), value: configuration.isPressed)
+    }
+}
+
+extension ButtonStyle where Self == PressableCardStyle {
+    static var pressableCard: PressableCardStyle { PressableCardStyle() }
+}
+
+/// The small chevron in a tappable card's corner.
+struct CardChevron: View {
+    var body: some View {
+        Image(systemName: "chevron.right")
+            .font(.caption2.weight(.bold))
+            .foregroundStyle(Theme.textSecondary.opacity(0.7))
+            .accessibilityHidden(true)
+    }
+}
+
 /// A full-width notice, e.g. "Reconnect Fitbit" or "You're offline".
 struct Banner: View {
     let symbol: String

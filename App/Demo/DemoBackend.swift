@@ -13,6 +13,8 @@ nonisolated struct DemoHealthSource: HealthDataSource {
     func device() async throws -> DeviceStatus? {
         DeviceStatus(name: "Fitbit Air", batteryPercent: 82, lastSync: Date().addingTimeInterval(-4 * 60))
     }
+
+    func profileAge() async throws -> Int? { 29 }
 }
 
 /// A pretend server with four friends in one group, for demo mode, previews, and
