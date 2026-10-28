@@ -12,25 +12,21 @@ struct ProfileView: View {
     private var team: TeamModel { session.team }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 16) {
-                header
-                TierCard(tier: health.snapshot.tier)
-                BadgesSection(earned: health.snapshot.badges)
-                goalsSection
-                sharingSection
-                trackerSection
-                accountSection
-                Text("Scores are estimates to guide training, not medical advice.\nVersion \(appVersion)")
-                    .font(.app(.caption))
-                    .foregroundStyle(Theme.textSecondary)
-                    .frame(maxWidth: .infinity)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(Theme.screenPadding)
+        PlutoScreen(title: session.profile?.displayName ?? "You", subtitle: "\(health.snapshot.tier.tier.title) tier",
+                    startsAtBottom: session.options.startsAtBottom) {
+            header
+            TierCard(tier: health.snapshot.tier).padding(.top, 8)
+            BadgesSection(earned: health.snapshot.badges)
+            goalsSection
+            sharingSection
+            trackerSection
+            accountSection
+            Text("Pluto · Version \(appVersion)\nScores are estimates to guide training, not medical advice.")
+                .font(.archivo(12))
+                .foregroundStyle(Theme.textMuted)
+                .frame(maxWidth: .infinity)
+                .multilineTextAlignment(.center)
         }
-        .defaultScrollAnchor(session.options.startsAtBottom ? .bottom : .top)
-        .background(Theme.background.ignoresSafeArea())
         .confirmationDialog("Delete your account?", isPresented: $confirmingDelete, titleVisibility: .visible) {
             Button("Delete account", role: .destructive) { Task { try? await session.deleteAccount() } }
         } message: {
@@ -45,15 +41,33 @@ struct ProfileView: View {
     }
 
     private var header: some View {
-        HStack(spacing: 14) {
-            AvatarView(name: session.profile?.displayName ?? "You", url: session.profile?.avatarURL, size: 64)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(session.profile?.displayName ?? "You").font(.app(.title, .bold)).foregroundStyle(Theme.textPrimary)
-                Label(health.snapshot.tier.tier.title, systemImage: "shield.fill")
-                    .font(.app(.subheadline, .semibold))
-                    .foregroundStyle(health.snapshot.tier.tier.color)
+        HStack(spacing: 16) {
+            Group {
+                if let url = session.profile?.avatarURL {
+                    AsyncImage(url: url) { phase in
+                        if let image = phase.image { image.resizable().scaledToFill() } else { avatarInitial }
+                    }
+                } else {
+                    avatarInitial
+                }
+            }
+            .frame(width: 64, height: 64)
+            .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            VStack(alignment: .leading, spacing: 6) {
+                Text(session.profile?.displayName ?? "You").screenTitle(36).lineLimit(1).minimumScaleFactor(0.7)
+                HStack(spacing: 6) {
+                    TierHexagon(tier: health.snapshot.tier.tier, size: 16, showsChevrons: false)
+                    Text("\(health.snapshot.tier.tier.title) tier").font(.archivo(14, .semibold)).foregroundStyle(Theme.textSecondary)
+                }
             }
             Spacer()
+        }
+    }
+
+    private var avatarInitial: some View {
+        Theme.teal.overlay {
+            Text(String(Initials.from(session.profile?.displayName ?? "You").prefix(1)))
+                .font(.archivo(28, .bold)).foregroundStyle(Theme.onInverse)
         }
     }
 
@@ -200,40 +214,93 @@ struct ProfileView: View {
 
 // MARK: - Tier
 
+/// The tier badge: a two-tone hexagon with rank chevrons.
+struct TierHexagon: View {
+    let tier: Tier
+    var size: CGFloat = 64
+    var showsChevrons = true
+
+    var body: some View {
+        Canvas { context, canvas in
+            let s = canvas.width / 64
+            func point(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x * s, y: y * s) }
+            var hexagon = Path()
+            hexagon.addLines([point(32, 3), point(57, 17.5), point(57, 46.5), point(32, 61), point(7, 46.5), point(7, 17.5)])
+            hexagon.closeSubpath()
+            context.fill(hexagon, with: .color(tier.color))
+            var right = Path()
+            right.addLines([point(32, 3), point(57, 17.5), point(57, 46.5), point(32, 61)])
+            right.closeSubpath()
+            context.fill(right, with: .color(.black.opacity(0.12)))
+            if showsChevrons {
+                var chevrons = Path()
+                chevrons.addLines([point(20, 31), point(32, 24), point(44, 31)])
+                chevrons.move(to: point(20, 41)); chevrons.addLine(to: point(32, 34)); chevrons.addLine(to: point(44, 41))
+                context.stroke(chevrons, with: .color(.white), style: StrokeStyle(lineWidth: 3.5 * s, lineCap: .round, lineJoin: .round))
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}
+
 struct TierCard: View {
     let tier: TierState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Training tier").sectionLabel()
                 Spacer()
-                Text("\(tier.consistency)% consistency").font(.app(.caption)).monospacedDigit().foregroundStyle(Theme.textSecondary)
+                (Text("\(tier.consistency)%").font(.archivo(14, .bold)).foregroundStyle(Theme.textPrimary)
+                 + Text(" consistency").font(.archivo(14)).foregroundStyle(Theme.textSecondary))
             }
-            HStack(spacing: 14) {
-                Image(systemName: tier.tier == .elite ? "crown.fill" : "shield.fill")
-                    .font(.app(size: 40))
-                    .foregroundStyle(tier.tier.color)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(tier.tier.title).font(.app(.title, .bold)).foregroundStyle(Theme.textPrimary)
-                    Text(subtitle).font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+            HStack(spacing: 16) {
+                TierHexagon(tier: tier.tier)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(tier.tier.title).font(.archivo(48, .semibold, width: 70)).tracking(-0.5).foregroundStyle(Theme.textPrimary)
+                        .frame(height: 40, alignment: .bottom)
+                    Text(nextLine).font(.archivo(15, .semibold)).foregroundStyle(tier.tier.next == nil ? Theme.textSecondary : Theme.goldText)
                 }
             }
-            if let next = tier.tier.next {
-                ProgressBar(fraction: Double(tier.consistency) / Double(max(1, next.minimumConsistency)), color: next.color)
+            .padding(.top, 16)
+            if !tier.isCalibrating {
+                TickScale(range: 0...100,
+                          minor: .init(divisions: 50, top: 10, height: 16),
+                          major: .init(divisions: 10, top: 2, height: 32),
+                          fill: Double(tier.consistency), fillColor: Color(light: 0x6E7C86, dark: 0xA3AEB6),
+                          bands: tier.tier.next.map { [.init(from: Double(tier.consistency), to: Double($0.minimumConsistency),
+                                                             color: Theme.goldTint, top: 10, height: 16)] } ?? [],
+                          markers: markers,
+                          height: 36, labelRoom: 20,
+                          axis: [(0, "0"), (25, "25"), (50, "50"), (75, "75"), (100, "100")])
+                    .padding(.top, 20)
             }
+            Text(tier.isCalibrating ? "Calibrating: your tier settles after 7 days of data." : "Share of sleep, step, and Effort goals hit over 28 days.")
+                .font(.archivo(15)).foregroundStyle(Theme.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 16)
         }
         .card()
         .accessibilityElement(children: .combine)
     }
 
-    private var subtitle: String {
-        if tier.isCalibrating { return "Calibrating: your tier settles after 7 days of data." }
-        guard let next = tier.tier.next, let points = tier.pointsToNextTier else {
-            return "The top tier. Hit your goals to stay here."
+    private var nextLine: String {
+        guard let next = tier.tier.next, let points = tier.pointsToNextTier else { return "The top tier. Hold it." }
+        return "\(points) points to \(next.title)"
+    }
+
+    private var markers: [TickScale.Marker] {
+        var result: [TickScale.Marker] = []
+        if let next = tier.tier.next {
+            result.append(.init(value: Double(next.minimumConsistency), color: Theme.gold, top: -4, height: 44,
+                                label: "\(next.title) \(next.minimumConsistency)%", labelColor: Theme.goldText,
+                                labelWeight: .medium, labelPlacement: .trailing))
         }
-        return "\(points) points to \(next.title). Share of sleep, step, and Effort goals hit over 28 days."
+        result.append(.init(value: Double(tier.consistency), color: Theme.textPrimary, top: -4, height: 44,
+                            label: "\(tier.consistency)%", labelColor: Theme.textPrimary, labelWeight: .medium,
+                            labelPlacement: .leading))
+        return result
     }
 }
 
@@ -242,46 +309,61 @@ struct TierCard: View {
 struct BadgesSection: View {
     let earned: [EarnedBadge]
     @State private var selected: BadgeDefinition?
+    @State private var showsAll = false
 
-    private let columns = [GridItem(.adaptive(minimum: 76), spacing: 12)]
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 10), count: 3)
 
     var body: some View {
         let earnedDates = Dictionary(earned.map { ($0.id, $0.earnedOn) }, uniquingKeysWith: { first, _ in first })
-        VStack(alignment: .leading, spacing: 8) {
-            SectionTitle("Badges", trailing: "\(earnedDates.count) of \(Badges.all.count)")
-            VStack(alignment: .leading, spacing: 14) {
-                Text("Badges mark milestones in sleep, activity, recovery, and consistency. Gold ones are earned; tap any badge to see what it takes.")
-                    .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                LazyVGrid(columns: columns, spacing: 14) {
-                    ForEach(Badges.all) { badge in
-                        let isEarned = earnedDates[badge.id] != nil
-                        Button { selected = badge } label: {
-                            VStack(spacing: 6) {
-                                BadgeIcon(badge: badge, isEarned: isEarned, size: 52)
-                                Text(badge.title)
-                                    .font(.app(.caption2, .semibold))
-                                    .foregroundStyle(isEarned ? Theme.textPrimary : Theme.textSecondary)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.8)
-                                Text(badge.detail)
-                                    .font(.app(size: 10))
-                                    .foregroundStyle(Theme.textSecondary)
-                                    .multilineTextAlignment(.center)
-                                    .lineLimit(2)
-                                    .minimumScaleFactor(0.85)
-                            }
-                            .frame(maxWidth: .infinity)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Badges").sectionHeading()
+                Spacer()
+                (Text("\(earnedDates.count)").font(.archivo(14, .bold)).foregroundStyle(Theme.textPrimary)
+                 + Text(" of \(Badges.all.count)").font(.archivo(14)).foregroundStyle(Theme.textSecondary))
+            }
+            .padding(.top, 14)
+            Text("Milestones in sleep, activity, recovery, and consistency. Filled ones are earned; tap any badge to see what it takes.")
+                .font(.archivo(14)).foregroundStyle(Theme.textMuted).lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, -4)
+            LazyVGrid(columns: columns, spacing: 10) {
+                ForEach(showsAll ? Badges.all : Array(Badges.all.prefix(9))) { badge in
+                    let isEarned = earnedDates[badge.id] != nil
+                    Button { selected = badge } label: {
+                        VStack(spacing: 4) {
+                            BadgeIcon(badge: badge, isEarned: isEarned, size: 52).padding(.bottom, 8)
+                            Text(badge.title)
+                                .font(.archivo(14, .bold))
+                                .foregroundStyle(isEarned ? Theme.textPrimary : Theme.textSecondary)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(badge.detail)
+                                .font(.archivo(12))
+                                .foregroundStyle(Theme.textMuted)
+                                .multilineTextAlignment(.center)
+                                .lineSpacing(1)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 0)
                         }
-                        .buttonStyle(.pressableCard)
-                        .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("\(badge.title), \(isEarned ? "earned" : "locked"): \(badge.detail)")
-                        .accessibilityHint("Shows what this badge means")
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .card(padding: EdgeInsets(top: 16, leading: 8, bottom: 16, trailing: 8), radius: 22)
                     }
+                    .buttonStyle(.pressableCard)
+                    .accessibilityElement(children: .ignore)
+                    .accessibilityLabel("\(badge.title), \(isEarned ? "earned" : "locked"): \(badge.detail)")
+                    .accessibilityHint("Shows what this badge means")
                 }
             }
-            .card()
+            Button {
+                withAnimation(.snappy) { showsAll.toggle() }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(showsAll ? "Show fewer" : "See all \(Badges.all.count) badges")
+                    Image(systemName: showsAll ? "chevron.up" : "chevron.right").font(.system(size: 13, weight: .bold))
+                }
+            }
+            .buttonStyle(.secondary)
         }
         .sheet(item: $selected) { badge in
             BadgeDetailSheet(badge: badge, earnedOn: earnedDates[badge.id])
@@ -299,18 +381,32 @@ struct BadgeIcon: View {
 
     var body: some View {
         Image(systemName: badge.symbol)
-            .font(.app(size: size * 0.42))
-            .foregroundStyle(isEarned ? Theme.gold : Theme.textSecondary.opacity(0.4))
+            .font(.system(size: size * 0.42, weight: .regular))
+            .foregroundStyle(isEarned ? Theme.onInverse : Color(light: 0x7D8B95, dark: 0x6E7F8A))
             .frame(width: size, height: size)
-            .background(isEarned ? Theme.gold.opacity(0.14) : Theme.surfaceRaised, in: Circle())
-            .overlay(alignment: .bottomTrailing) {
+            .background(isEarned ? Theme.inverse : Theme.surfaceRaised,
+                        in: RoundedRectangle(cornerRadius: size * 0.35, style: .continuous))
+            .overlay {
                 if !isEarned {
-                    Image(systemName: "lock.fill")
-                        .font(.app(size: size * 0.18, weight: .bold))
-                        .foregroundStyle(Theme.textSecondary)
-                        .padding(size * 0.08)
-                        .background(Theme.surface, in: Circle())
+                    RoundedRectangle(cornerRadius: size * 0.35, style: .continuous).strokeBorder(Theme.controlStroke, lineWidth: 1.5)
                 }
+            }
+            .overlay(alignment: .bottomTrailing) {
+                let dot = size * 0.385
+                Group {
+                    if isEarned {
+                        Image(systemName: "checkmark").font(.system(size: dot * 0.5, weight: .heavy)).foregroundStyle(.white)
+                            .frame(width: dot, height: dot)
+                            .background(Theme.teal, in: Circle())
+                            .overlay(Circle().stroke(Theme.surface, lineWidth: 2))
+                    } else {
+                        Image(systemName: "lock").font(.system(size: dot * 0.48, weight: .bold)).foregroundStyle(Theme.textMuted)
+                            .frame(width: dot, height: dot)
+                            .background(Theme.surface, in: Circle())
+                            .overlay(Circle().strokeBorder(Theme.controlStroke, lineWidth: 1.5))
+                    }
+                }
+                .offset(x: 4, y: 4)
             }
     }
 }

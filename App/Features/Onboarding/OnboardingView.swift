@@ -65,54 +65,88 @@ struct WelcomeView: View {
     @Environment(\.exploreSampleData) private var exploreSampleData
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 30) {
+                HStack(spacing: 12) {
+                    PlutoMark(size: 40)
+                    Text("Pluto").font(.archivo(34, .bold, width: 85)).tracking(-0.68).foregroundStyle(.white)
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Pluto")
+                VStack(spacing: 22) {
+                    WelcomeReadout(title: "Recovery", value: 47, color: Color(hex: 0x3CC2B4))
+                    WelcomeReadout(title: "Sleep", value: 76, color: Color(hex: 0x9D91FF))
+                    WelcomeReadout(title: "Effort", value: 4, color: Color(hex: 0xFF8F52), target: 40...60)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Sample readout: Recovery 47, Sleep 76, Effort 4")
+            }
             Spacer(minLength: 24)
-            HeroRings()
-                .frame(height: 220)
-            VStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 16) {
                 Text("Train together.\nRecover smarter.")
-                    .font(.app(.largeTitle, .black))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Theme.textPrimary)
+                    .font(.archivo(50, .bold, width: 78))
+                    .tracking(-1)
+                    .lineSpacing(-4)
+                    .foregroundStyle(.white)
                     .fixedSize(horizontal: false, vertical: true)
+                    .minimumScaleFactor(0.8)
                 Text("Daily Recovery, Sleep, and Effort scores from your Fitbit Air, plus streaks, challenges, and leaderboards with friends.")
-                    .font(.app(.callout))
-                    .multilineTextAlignment(.center)
-                    .foregroundStyle(Theme.textSecondary)
+                    .font(.archivo(16))
+                    .lineSpacing(4)
+                    .foregroundStyle(Color(hex: 0xB4C1C9))
                     .fixedSize(horizontal: false, vertical: true)
             }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.top, 28)
             Spacer(minLength: 24)
-            VStack(spacing: 14) {
+            VStack(spacing: 6) {
                 if let error = model.errorMessage {
-                    Text(error).font(.app(.footnote)).foregroundStyle(Theme.recoveryRest).multilineTextAlignment(.center)
+                    Text(error).font(.archivo(13)).foregroundStyle(Color(hex: 0xFF8F52))
+                        .multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 }
                 Button {
                     Task { await model.continueWithGoogle(authenticate: authenticate) }
                 } label: {
-                    HStack(spacing: 10) {
-                        if model.isBusy { ProgressView().tint(.white) } else { Image(systemName: "g.circle.fill") }
-                        Text("Continue with Google")
+                    HStack(spacing: 12) {
+                        if model.isBusy {
+                            ProgressView().tint(Color(hex: 0x0C1B26))
+                        } else {
+                            Text("G").font(.archivo(14, .bold)).foregroundStyle(.white)
+                                .frame(width: 26, height: 26)
+                                .background(Color(hex: 0x0C1B26), in: Circle())
+                        }
+                        Text("Continue with Google").font(.archivo(17, .bold))
                     }
+                    .foregroundStyle(Color(hex: 0x0C1B26))
+                    .frame(maxWidth: .infinity, minHeight: 56)
+                    .background(.white, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
-                .buttonStyle(.primary)
+                .buttonStyle(.plain)
                 .disabled(model.isBusy)
                 if let exploreSampleData {
-                    Button("Explore with sample data") { exploreSampleData() }
-                        .font(.app(.subheadline, .semibold))
-                        .foregroundStyle(Theme.effort)
-                        .disabled(model.isBusy)
+                    Button { exploreSampleData() } label: {
+                        Text("Explore with sample data").font(.archivo(16, .semibold))
+                            .foregroundStyle(Color(hex: 0x6FD9CC))
+                            .frame(maxWidth: .infinity, minHeight: 48)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(model.isBusy)
                 }
-                Label("Your raw health data stays on this iPhone. Friends see only the daily scores you choose to share.",
-                      systemImage: "lock.fill")
-                    .font(.app(.caption))
-                    .foregroundStyle(Theme.textSecondary)
-                    .multilineTextAlignment(.center)
+                HStack(alignment: .top, spacing: 10) {
+                    Image(systemName: "lock").font(.system(size: 14))
+                    Text("Your raw health data stays on this iPhone. Friends see only the daily scores you choose to share.")
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .font(.archivo(13))
+                .lineSpacing(2)
+                .foregroundStyle(Color(hex: 0x8FA0AB))
+                .padding(.top, 4)
             }
-            .padding(.horizontal, Theme.screenPadding)
-            .padding(.bottom, 12)
         }
+        .padding(.horizontal, Theme.screenPadding)
+        .padding(.top, 8)
+        .padding(.bottom, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+        .background(Color(hex: 0x0C1B26).ignoresSafeArea())
+        .environment(\.colorScheme, .dark)
     }
 
     private func authenticate(url: URL, callbackScheme: String) async throws -> URL {
@@ -120,6 +154,32 @@ struct WelcomeView: View {
             return try await webAuthenticationSession.authenticate(using: url, callbackURLScheme: callbackScheme)
         } catch let error as ASWebAuthenticationSessionError where error.code == .canceledLogin {
             throw GoogleAuthError.cancelled
+        }
+    }
+}
+
+/// One line of the welcome screen's sample readout: label, number, and a full-width ruler.
+struct WelcomeReadout: View {
+    let title: String
+    let value: Int
+    let color: Color
+    var target: ClosedRange<Int>?
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(alignment: .bottom) {
+                Text(title).font(.mono(11)).tracking(1.1).textCase(.uppercase).foregroundStyle(Color(hex: 0xA9B7C0))
+                Spacer()
+                Text("\(value)").font(.scoreNumber(42)).foregroundStyle(.white).frame(height: 36, alignment: .bottom)
+            }
+            TickScale(range: 0...100,
+                      minor: .init(divisions: 50, top: 7, height: 12),
+                      major: .init(divisions: 10, top: 0, height: 26),
+                      fill: Double(value), fillColor: color, fillsMajor: target == nil,
+                      minorColor: Color(hex: 0x2A3B46), majorColor: Color(hex: 0x3A4C58),
+                      bands: target.map { [.init(from: Double($0.lowerBound), to: Double($0.upperBound),
+                                                 color: Color(hex: 0x3A2A22), top: -3, height: 32, radius: 6)] } ?? [],
+                      height: 26, labelRoom: 3)
         }
     }
 }

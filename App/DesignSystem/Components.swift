@@ -14,6 +14,16 @@ extension RecoveryBand {
         }
     }
 
+    /// Pill background behind the band name.
+    var tint: Color {
+        self == .recover ? Theme.effortTint : Theme.tealTint
+    }
+
+    /// Pill text color.
+    var textColor: Color {
+        self == .recover ? Theme.effortText : Theme.tealDeep
+    }
+
     /// One line of coaching for the day.
     var advice: String {
         switch self {
@@ -27,7 +37,7 @@ extension RecoveryBand {
 extension Tier {
     var color: Color {
         switch self {
-        case .rookie: Theme.textSecondary
+        case .rookie: Theme.textFaint
         case .bronze: Theme.bronze
         case .silver: Theme.silver
         case .gold: Theme.gold
@@ -137,24 +147,24 @@ struct EffortTrack: View {
     }
 }
 
-/// A small label + value pair, e.g. "HRV  62 ms".
+/// A mono label over a condensed number, e.g. "HRV / 52 ms".
 struct StatPill: View {
     let title: String
     let value: String
     var color: Color = Theme.textPrimary
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.app(.caption2, .semibold)).foregroundStyle(Theme.textSecondary).textCase(.uppercase)
-            Text(value).font(.app(.subheadline, .semibold)).monospacedDigit().foregroundStyle(color)
-                .lineLimit(1).minimumScaleFactor(0.7)
+        VStack(alignment: .leading, spacing: 6) {
+            Text(title).font(.mono(11)).tracking(0.88).textCase(.uppercase).foregroundStyle(Theme.textMuted)
+            Text(value).font(.archivo(28, .semibold, width: 72)).monospacedDigit().foregroundStyle(color)
+                .lineLimit(1).minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .combine)
     }
 }
 
-/// A section title above a group of cards.
+/// A section heading with an optional mono note on the right ("Leaderboard … THIS WEEK").
 struct SectionTitle: View {
     let title: String
     var trailing: String?
@@ -166,19 +176,18 @@ struct SectionTitle: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.app(.title3, .bold)).foregroundStyle(Theme.textPrimary)
+            Text(title).sectionHeading()
             Spacer()
             if let trailing {
-                Text(trailing).font(.app(.footnote)).foregroundStyle(Theme.textSecondary)
+                Text(trailing).font(.mono(11)).tracking(0.88).textCase(.uppercase).foregroundStyle(Theme.textMuted)
             }
         }
-        .padding(.top, 8)
+        .padding(.top, 14)
         .accessibilityAddTraits(.isHeader)
     }
 }
 
-/// "▲ 6 vs yesterday": a score's change, green when it went up and red when it went down.
-/// Pass `tint` to use one color for both directions (Effort: more isn't always better).
+/// "▼ 8 vs yesterday": the arrow carries the color, the text stays quiet.
 struct ChangeLabel: View {
     let change: Int?
     var caption = "vs yesterday"
@@ -186,25 +195,24 @@ struct ChangeLabel: View {
 
     var body: some View {
         if let change {
-            HStack(spacing: 3) {
-                Image(systemName: change > 0 ? "arrowtriangle.up.fill" : (change < 0 ? "arrowtriangle.down.fill" : "equal"))
-                    .font(.app(size: 8, weight: .bold))
-                Text(change == 0 ? "Same" : "\(abs(change))").monospacedDigit()
-                Text(caption).foregroundStyle(Theme.textSecondary).font(.app(.caption))
+            HStack(spacing: 5) {
+                if change != 0 {
+                    DeltaArrow(down: change < 0, color: color(change))
+                }
+                Text(change == 0 ? "Same \(caption)" : "\(abs(change)) \(caption)").monospacedDigit()
             }
-            .font(.app(.caption, .semibold))
-            .foregroundStyle(color(change))
+            .font(.archivo(13))
+            .foregroundStyle(Theme.textSecondary)
             .lineLimit(1)
-            .minimumScaleFactor(0.8)
+            .fixedSize()
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(change == 0 ? "Same as yesterday" : "\(change > 0 ? "Up" : "Down") \(abs(change)) \(caption)")
         }
     }
 
     private func color(_ change: Int) -> Color {
-        if change == 0 { return Theme.textSecondary }
         if let tint { return tint }
-        return change > 0 ? Theme.recoveryGo : Theme.recoveryRest
+        return change > 0 ? Theme.teal : Theme.effort
     }
 }
 
@@ -225,8 +233,8 @@ extension ButtonStyle where Self == PressableCardStyle {
 struct CardChevron: View {
     var body: some View {
         Image(systemName: "chevron.right")
-            .font(.app(.caption2, .bold))
-            .foregroundStyle(Theme.textSecondary.opacity(0.7))
+            .font(.system(size: 13, weight: .semibold))
+            .foregroundStyle(Theme.textMuted)
             .accessibilityHidden(true)
     }
 }
@@ -235,19 +243,28 @@ struct CardChevron: View {
 struct Banner: View {
     let symbol: String
     let message: String
-    var color: Color = Theme.recoverySteady
+    var color: Color = Theme.teal
     var actionTitle: String?
     var action: (() -> Void)?
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: symbol).foregroundStyle(color).font(.app(.title3))
-            Text(message).font(.app(.subheadline)).foregroundStyle(Theme.textPrimary)
+        HStack(spacing: 10) {
+            Image(systemName: symbol).foregroundStyle(color).font(.system(size: 16, weight: .medium))
+            Text(message).font(.archivo(14)).foregroundStyle(Theme.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
             if let actionTitle, let action {
-                Button(actionTitle, action: action).font(.app(.subheadline, .semibold)).tint(color)
+                Button(action: action) {
+                    Text(actionTitle).font(.archivo(14, .semibold)).foregroundStyle(Theme.onInverse)
+                        .padding(.horizontal, 16).frame(height: 44)
+                        .background(Theme.inverse, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
         }
-        .card()
+        .padding(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: action == nil ? 16 : 4))
+        .frame(minHeight: 52)
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous)
+            .strokeBorder(Theme.controlStroke, style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
     }
 }

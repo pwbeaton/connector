@@ -1,64 +1,134 @@
+import CoreText
 import SwiftUI
 import UIKit
 
-/// The "training camp" look: dark-first, sleek, big rounded numerals.
-///
-/// Color rules:
-/// - Recovery band colors (green / yellow / red) appear only on Recovery.
-/// - Sleep is violet, Effort and activity are electric blue.
-/// - Everything else is neutral, so the three score colors stand out.
+/// Pluto's look: calm navy ink on cool grey, one teal accent, violet for sleep and
+/// burnt orange for effort. Numbers are set in a condensed Archivo; small labels in
+/// IBM Plex Mono. Every value here comes from the "Fitbit Air Tracker Redesign" spec
+/// (light and dark boards).
 enum Theme {
-    // MARK: Surfaces and text
-    static let background = Color(light: 0xF3F4F7, dark: 0x07090C)
-    static let surface = Color(light: 0xFFFFFF, dark: 0x12161C)
-    static let surfaceRaised = Color(light: 0xEBEDF1, dark: 0x1B2129)
-    static let textPrimary = Color(light: 0x0B0D10, dark: 0xF2F4F7)
-    static let textSecondary = Color(light: 0x5B6474, dark: 0x8A94A6)
-    static let hairline = Color(light: 0x0B0D10, dark: 0xFFFFFF).opacity(0.08)
+    // MARK: Surfaces
+    static let background = Color(light: 0xF2F4F5, dark: 0x0B141B)
+    static let surface = Color(light: 0xFFFFFF, dark: 0x131F28)
+    /// Chips, pills, and the "about the same" capsule.
+    static let surfaceRaised = Color(light: 0xF2F4F5, dark: 0x1A2730)
+    /// The 1 px ring around cards.
+    static let cardStroke = Color(light: 0xE3E8EB, dark: 0x1E2C36)
+    /// Dividers inside cards.
+    static let hairline = Color(light: 0xE8ECEF, dark: 0x22313B)
+    /// Grid lines inside charts.
+    static let gridLine = Color(light: 0xEEF1F3, dark: 0x1E2C36)
+    /// Chart baselines.
+    static let baseline = Color(light: 0xD3DADF, dark: 0x2E3D47)
+    /// Outline of round buttons and segmented controls.
+    static let controlStroke = Color(light: 0xDDE3E7, dark: 0x2A3943)
+
+    // MARK: Text
+    static let textPrimary = Color(light: 0x0C1B26, dark: 0xEEF2F4)
+    /// Body copy and secondary values.
+    static let textSecondary = Color(light: 0x44535E, dark: 0xB3C0C8)
+    /// Labels, captions, axis text.
+    static let textMuted = Color(light: 0x5F6D78, dark: 0x8696A1)
+    /// Disabled icons and empty streaks.
+    static let textFaint = Color(light: 0x9AA7B0, dark: 0x4C5D68)
+
+    // MARK: Inverse (filled navy controls; they turn light in dark mode)
+    static let inverse = Color(light: 0x0C1B26, dark: 0xEEF2F4)
+    static let onInverse = Color(light: 0xFFFFFF, dark: 0x0B141B)
+
+    // MARK: Ticks and markers
+    static let tickMinor = Color(light: 0xD3DADF, dark: 0x2A3943)
+    static let tickMajor = Color(light: 0xB4BFC6, dark: 0x3E4F5B)
+    static let markerDashed = Color(light: 0x7D8B95, dark: 0x6E7F8A)
+    static let trackLine = Color(light: 0xE1E6EA, dark: 0x1E2C36)
 
     // MARK: Score colors
-    static let recoveryGo = Color(light: 0x0FB868, dark: 0x16E07F)
-    static let recoverySteady = Color(light: 0xD99A00, dark: 0xFFC83D)
-    static let recoveryRest = Color(light: 0xE5303F, dark: 0xFF4D5E)
-    static let sleep = Color(light: 0x6A55F0, dark: 0x8F7BFF)
-    static let effort = Color(light: 0x1484E0, dark: 0x2EA8FF)
+    static let teal = Color(light: 0x0B7A75, dark: 0x3CC2B4)
+    static let tealDeep = Color(light: 0x08605B, dark: 0x6FD9CC)
+    static let tealTint = Color(light: 0xE1F0EE, dark: 0x0F3533)
+    static let tealRow = Color(light: 0xEEF6F5, dark: 0x0F2B2A)
+    static let tealTrack = Color(light: 0xD8E8E6, dark: 0x1C3A38)
+    static let recoveryBar = Color(light: 0x1F8E86, dark: 0x34B3A6)
+
+    static let sleep = Color(light: 0x5B4BD6, dark: 0x9D91FF)
+    static let sleepTint = Color(light: 0xECE9FB, dark: 0x262249)
+    static let sleepStem = Color(light: 0xE7E4FB, dark: 0x2A2550)
+
+    static let effort = Color(light: 0xC2410C, dark: 0xFF8F52)
+    static let effortText = Color(light: 0xA63A0B, dark: 0xFFB089)
+    static let effortTint = Color(light: 0xFBE6D8, dark: 0x3A2418)
+    static let effortBar = Color(light: 0xD9622B, dark: 0xE8763C)
+
+    static let goldText = Color(light: 0x8A6A00, dark: 0xE8C25A)
+    static let goldTint = Color(light: 0xF6EFD9, dark: 0x3A3018)
+
+    /// Recovery bands: Go and Steady share the teal accent; Recover warns in orange.
+    static let recoveryGo = teal
+    static let recoverySteady = teal
+    static let recoveryRest = effort
 
     // MARK: Tier metals
-    static let bronze = Color(light: 0xA86B3C, dark: 0xD39A6A)
-    static let silver = Color(light: 0x7D8896, dark: 0xC9D1DB)
-    static let gold = Color(light: 0xC99A1E, dark: 0xF2C14E)
-    static let platinum = Color(light: 0x2BA59B, dark: 0x9FE8E1)
+    static let bronze = Color(light: 0xB07A4F, dark: 0xD39A6A)
+    static let silver = Color(light: 0xA3AEB6, dark: 0xA3AEB6)
+    static let gold = Color(light: 0xB8860B, dark: 0xE2B53E)
+    static let platinum = Color(light: 0x5FA8A1, dark: 0x9FE8E1)
+
+    // MARK: Navigation bar
+    static let navBackground = Color(light: 0x0C1B26, dark: 0x18252E)
+    static let navActive = Color(light: 0x273841, dark: 0xEEF2F4)
+    static let navActiveText = Color(light: 0xFFFFFF, dark: 0x0B141B)
+    static let navInactive = Color(light: 0x93A3AE, dark: 0x8696A1)
 
     // MARK: Layout
-    static let cornerRadius: CGFloat = 20
+    static let cornerRadius: CGFloat = 26
     static let screenPadding: CGFloat = 20
-    static let cardPadding: CGFloat = 16
+    static let cardPadding: CGFloat = 22
     /// Comfortably above Apple's 44-point minimum tap target.
-    static let buttonHeight: CGFloat = 54
+    static let buttonHeight: CGFloat = 56
 }
 
-/// The app's typeface: Satoshi by Indian Type Foundry (ITF Free Font License), a modernist
-/// grotesk with tabular figures. The font files live in Shared/Fonts but are git-ignored
-/// (the license forbids public redistribution): run scripts/fetch-fonts.sh after cloning.
-/// Without them, text falls back to the system font.
+/// Archivo (variable: weight 100–900, width 62–125%) and IBM Plex Mono, both under the SIL
+/// Open Font License and bundled in Shared/Fonts. The redesign leans on Archivo's width axis:
+/// condensed numerals (66–75%), slightly narrowed headings (85%), normal-width text.
 enum Typeface {
-    static func name(_ weight: Font.Weight) -> String {
+    static let archivo = "ArchivoRoman-Regular"
+    static let monoRegular = "IBMPlexMono-Regular"
+    static let monoMedium = "IBMPlexMono-Medium"
+
+    private static let weightAxis = 0x7767_6874 // 'wght'
+    private static let widthAxis = 0x7764_7468  // 'wdth'
+
+    static func archivo(size: CGFloat, weight: Double, width: Double) -> CTFont {
+        let attributes: [CFString: Any] = [
+            kCTFontNameAttribute: archivo,
+            kCTFontVariationAttribute: [weightAxis: weight, widthAxis: width],
+        ]
+        return CTFontCreateWithFontDescriptor(CTFontDescriptorCreateWithAttributes(attributes as CFDictionary), size, nil)
+    }
+
+    static func numericWeight(_ weight: Font.Weight) -> Double {
         switch weight {
-        case .black, .heavy: "Satoshi-Black"
-        case .bold, .semibold: "Satoshi-Bold"
-        case .medium: "Satoshi-Medium"
-        default: "Satoshi-Regular"
+        case .ultraLight: 200
+        case .thin: 100
+        case .light: 300
+        case .medium: 500
+        case .semibold: 600
+        case .bold: 700
+        case .heavy: 800
+        case .black: 900
+        default: 400
         }
     }
 
-    /// iOS's default point sizes for each text style (Dynamic Type scales from these).
+    /// iOS's default point sizes for each text style.
     static func size(_ style: Font.TextStyle) -> CGFloat {
         switch style {
-        case .largeTitle: 34
+        case .largeTitle: 40
         case .title: 28
         case .title2: 22
         case .title3: 20
-        case .headline, .body: 17
+        case .headline: 17
+        case .body: 17
         case .callout: 16
         case .subheadline: 15
         case .footnote: 13
@@ -69,43 +139,81 @@ enum Typeface {
     }
 
     static func defaultWeight(_ style: Font.TextStyle) -> Font.Weight {
-        style == .headline ? .bold : .regular
+        switch style {
+        case .headline: .bold
+        case .largeTitle: .bold
+        default: .regular
+        }
+    }
+
+    /// Headings are set a little narrower than body text.
+    static func width(_ style: Font.TextStyle) -> Double {
+        switch style {
+        case .largeTitle, .title, .title2: 85
+        default: 100
+        }
     }
 }
 
 extension Font {
-    /// App text in a given style, scaling with the user's text size.
+    /// Archivo at an exact size, weight, and width (percent of normal).
+    static func archivo(_ size: CGFloat, _ weight: Font.Weight = .regular, width: Double = 100) -> Font {
+        Font(Typeface.archivo(size: size, weight: Typeface.numericWeight(weight), width: width))
+    }
+
+    /// IBM Plex Mono, for small uppercase labels, dates, and axis ticks.
+    static func mono(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        .custom(weight == .regular ? Typeface.monoRegular : Typeface.monoMedium, fixedSize: size)
+    }
+
+    /// App text in a given style.
     static func app(_ style: Font.TextStyle, _ weight: Font.Weight? = nil) -> Font {
-        .custom(Typeface.name(weight ?? Typeface.defaultWeight(style)), size: Typeface.size(style), relativeTo: style)
+        archivo(Typeface.size(style), weight ?? Typeface.defaultWeight(style), width: Typeface.width(style))
     }
 
-    /// App text at a fixed size (small decorations and icons).
+    /// App text at a fixed size.
     static func app(size: CGFloat, weight: Font.Weight = .regular) -> Font {
-        .custom(Typeface.name(weight), fixedSize: size)
+        archivo(size, weight)
     }
 
-    /// Big score numerals. Fixed-width digits by default so counting animations don't jiggle;
-    /// pass `tabular: false` for decimals like "25.9", where tabular spacing leaves gaps.
-    static func scoreNumber(_ size: CGFloat, tabular: Bool = true) -> Font {
-        let font = Font.custom(Typeface.name(.bold), fixedSize: size)
+    /// Big score numerals: semibold Archivo at 66% width, tabular digits by default.
+    static func scoreNumber(_ size: CGFloat, tabular: Bool = true, width: Double = 66) -> Font {
+        let font = archivo(size, .semibold, width: width)
         return tabular ? font.monospacedDigit() : font
     }
 }
 
 extension View {
-    /// Small uppercase section label, e.g. "RECOVERY".
-    func sectionLabel() -> some View {
-        font(.caption.weight(.semibold))
-            .tracking(1.2)
+    /// Small uppercase mono label, e.g. "RECOVERY".
+    func sectionLabel(_ color: Color = Theme.textMuted) -> some View {
+        font(.mono(11, .medium))
+            .tracking(1.1)
             .textCase(.uppercase)
-            .foregroundStyle(Theme.textSecondary)
+            .foregroundStyle(color)
     }
 
-    /// A rounded card on the raised surface color.
-    func card() -> some View {
-        padding(Theme.cardPadding)
+    /// A white card with a hairline ring and generous corners.
+    func card(padding: EdgeInsets = EdgeInsets(top: 20, leading: 25, bottom: 22, trailing: 25),
+              radius: CGFloat = Theme.cornerRadius) -> some View {
+        self.padding(padding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .background(Theme.surface, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Theme.cardStroke, lineWidth: 1))
+    }
+
+    /// A large screen title: "Today", "Team".
+    func screenTitle(_ size: CGFloat = 40) -> some View {
+        font(.archivo(size, .bold, width: 85)).tracking(-size * 0.02).foregroundStyle(Theme.textPrimary)
+    }
+
+    /// A section heading inside a screen: "Streaks", "Leaderboard".
+    func sectionHeading() -> some View {
+        font(.archivo(24, .bold, width: 85)).tracking(-0.24).foregroundStyle(Theme.textPrimary)
+    }
+
+    /// The mono eyebrow above a screen title: "TUE · OCT 27".
+    func eyebrow() -> some View {
+        font(.mono(12, .medium)).tracking(0.96).textCase(.uppercase).foregroundStyle(Theme.textMuted)
     }
 }
 
@@ -115,6 +223,10 @@ extension Color {
         self.init(uiColor: UIColor { traits in
             UIColor(hex: traits.userInterfaceStyle == .dark ? dark : light)
         })
+    }
+
+    init(hex: UInt32) {
+        self.init(uiColor: UIColor(hex: hex))
     }
 }
 
@@ -129,28 +241,29 @@ extension UIColor {
     }
 }
 
-/// The full-width button at the bottom of onboarding screens.
+/// The filled navy button (white in dark mode), e.g. "Sign in", "Save goals".
 struct PrimaryButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.app(.headline))
+            .font(.archivo(17, .bold))
             .frame(maxWidth: .infinity, minHeight: Theme.buttonHeight)
-            .foregroundStyle(.white)
-            .background(Theme.effort, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .foregroundStyle(Theme.onInverse)
+            .background(Theme.inverse, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             .opacity(isEnabled ? (configuration.isPressed ? 0.8 : 1) : 0.4)
     }
 }
 
-/// A quieter full-width button (outlined).
+/// The outlined button, e.g. "See all 20 badges".
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.app(.headline))
-            .frame(maxWidth: .infinity, minHeight: Theme.buttonHeight)
+            .font(.archivo(15, .bold))
+            .frame(maxWidth: .infinity, minHeight: 50)
             .foregroundStyle(Theme.textPrimary)
-            .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Theme.controlStroke, lineWidth: 1))
+            .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .opacity(configuration.isPressed ? 0.7 : 1)
     }
 }

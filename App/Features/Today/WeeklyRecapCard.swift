@@ -32,7 +32,7 @@ struct WeeklyRecapCard: View {
                 Label(recap.tier.title, systemImage: "shield.fill")
                     .font(.app(.headline)).foregroundStyle(recap.tier.color)
                 Spacer()
-                Text((Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? "Connector")
+                Text((Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? "Pluto")
                     .font(.app(.caption, .bold)).foregroundStyle(Theme.textSecondary)
             }
         }

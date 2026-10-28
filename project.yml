@@ -20,7 +20,7 @@ configFiles:
 settings:
   base:
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "3"
+    CURRENT_PROJECT_VERSION: "4"
     TARGETED_DEVICE_FAMILY: "1" # iPhone only
     CODE_SIGN_STYLE: Automatic
     # Swift 6 language mode: the compiler checks for data races.
@@ -49,10 +49,9 @@ targets:
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
         UIAppFonts:
-          - Satoshi-Regular.otf
-          - Satoshi-Medium.otf
-          - Satoshi-Bold.otf
-          - Satoshi-Black.otf
+          - Archivo-Variable.ttf
+          - IBMPlexMono-Regular.ttf
+          - IBMPlexMono-Medium.ttf
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
@@ -118,10 +117,9 @@ targets:
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
         UIAppFonts:
-          - Satoshi-Regular.otf
-          - Satoshi-Medium.otf
-          - Satoshi-Bold.otf
-          - Satoshi-Black.otf
+          - Archivo-Variable.ttf
+          - IBMPlexMono-Regular.ttf
+          - IBMPlexMono-Medium.ttf
         # Must match the app's version, or App Store Connect rejects the upload.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)

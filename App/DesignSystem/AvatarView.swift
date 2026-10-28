@@ -8,6 +8,8 @@ struct AvatarView: View {
     /// A photo picked but not uploaded yet; shown instead of `url`.
     var localImage: UIImage?
     var size: CGFloat = 44
+    /// Teal fill for "you"; quiet grey for everyone else.
+    var highlighted = false
 
     var body: some View {
         Group {
@@ -33,11 +35,11 @@ struct AvatarView: View {
 
     private var initials: some View {
         Circle()
-            .fill(.tint.opacity(0.15))
+            .fill(highlighted ? Theme.teal : Theme.surfaceRaised)
             .overlay {
-                Text(Initials.from(name))
-                    .font(.app(size: size * 0.4, weight: .semibold))
-                    .foregroundStyle(.tint)
+                Text(String(Initials.from(name).prefix(1)))
+                    .font(.archivo(size * 0.4, .bold))
+                    .foregroundStyle(highlighted ? Theme.onInverse : Theme.textSecondary)
             }
     }
 }

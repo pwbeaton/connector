@@ -1,4 +1,4 @@
-# Connector (working title)
+# Pluto
 
 An iPhone app for friends who wear a **Fitbit Air**: daily **Recovery**, **Sleep**, and **Effort** scores, an Effort target for the day, streaks, training tiers, weekly challenges, badges, and group leaderboards. "Training camp" style: scores front and center, dark-first.
 

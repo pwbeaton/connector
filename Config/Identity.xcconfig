@@ -7,7 +7,7 @@
 // Note: xcconfig treats "//" as a comment, so never put comments after a value.
 
 // Working title. Change it any time.
-APP_DISPLAY_NAME = Statline
+APP_DISPLAY_NAME = Pluto
 APP_BUNDLE_ID = com.pwbeaton.statline
 APP_GROUP_ID = group.$(APP_BUNDLE_ID)
 

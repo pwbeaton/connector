@@ -24,5 +24,3 @@ supabase/.env
 .DS_Store
 .linux-check/
 
-# Satoshi font files (ITF Free Font License forbids public redistribution). Run scripts/fetch-fonts.sh.
-Shared/Fonts/*.otf
