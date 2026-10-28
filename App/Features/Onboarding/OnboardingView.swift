@@ -168,6 +168,7 @@ struct DeviceCheckView: View {
 
     private var deviceDetail: String {
         guard let device = model.device else {
+            if model.accountNotLinked { return GoogleHealthError.accountNotLinkedMessage }
             return model.deviceChecked ? "Pair your Fitbit Air in the Google Health app. You can continue anyway." : " "
         }
         var parts: [String] = []

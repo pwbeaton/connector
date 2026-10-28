@@ -3,8 +3,14 @@ import Foundation
 nonisolated enum GoogleHealthError: Error, Equatable {
     /// The user unticked the scope this data needs on Google's consent screen.
     case missingScope
+    /// The Google account has no Google Health (Fitbit) profile. Usually the user
+    /// signed in with a different Google account from the one their tracker uses.
+    case accountNotLinked
     case http(status: Int, message: String)
     case invalidResponse
+
+    static let accountNotLinkedMessage =
+        "This Google account isn't linked to Google Health. Sign out and sign in with the Google account your Fitbit Air uses."
 }
 
 /// Calls the Google Health API v4 for the signed-in user ("users/me").
@@ -80,6 +86,12 @@ nonisolated struct GoogleHealthClient: Sendable {
 
     // MARK: Transport
 
+    /// Google answers FAILED_PRECONDITION with reason ACCOUNT_NOT_LINKED when the
+    /// account has no Google Health profile.
+    static func isAccountNotLinked(_ data: Data) -> Bool {
+        String(decoding: data, as: UTF8.self).contains("ACCOUNT_NOT_LINKED")
+    }
+
     func makeRequest(path: String, method: String = "GET", query: [URLQueryItem] = [], body: Data? = nil,
                      accessToken: String) -> URLRequest {
         var components = URLComponents(string: Self.baseURL + path)!
@@ -110,6 +122,8 @@ nonisolated struct GoogleHealthClient: Sendable {
                 } catch {
                     throw GoogleHealthError.invalidResponse
                 }
+            case 400 where Self.isAccountNotLinked(data), 403 where Self.isAccountNotLinked(data):
+                throw GoogleHealthError.accountNotLinked
             case 401 where !refreshedAfter401:
                 refreshedAfter401 = true
                 _ = try await session.accessToken(forceRefresh: true)

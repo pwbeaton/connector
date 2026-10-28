@@ -141,6 +141,8 @@ actor SyncEngine {
             return .reconnectRequired
         case let error as URLError where [.notConnectedToInternet, .networkConnectionLost, .timedOut].contains(error.code):
             return .failed("You're offline. Showing your last sync.")
+        case GoogleHealthError.accountNotLinked:
+            return .failed(GoogleHealthError.accountNotLinkedMessage)
         case GoogleHealthError.http(status: let status, message: _) where status >= 500 || status == 429:
             return .failed("Google Health is busy right now. Try again in a few minutes.")
         default:

@@ -163,6 +163,13 @@ struct GoogleHealthClientTests {
         await #expect(throws: GoogleHealthError.missingScope) { try await client(transport).settings() }
     }
 
+    @Test func reportsAnAccountWithoutGoogleHealth() async {
+        let body = #"{"error": {"code": 400, "message": "The account is not linked to Google Health.", "status": "FAILED_PRECONDITION", "details": [{"reason": "ACCOUNT_NOT_LINKED", "domain": "health.googleapis.com"}]}}"#
+        let transport = StubTransport { _ in (400, body) }
+        await #expect(throws: GoogleHealthError.accountNotLinked) { try await client(transport).pairedDevices() }
+        #expect(transport.requests.count == 1)
+    }
+
     @Test func sleepFilterUsesTheCivilEndTime() {
         #expect(GoogleHealthClient.sleepFilter(from: CivilDate(year: 2026, month: 10, day: 1))
                 == #"sleep.interval.civil_end_time >= "2026-10-01""#)

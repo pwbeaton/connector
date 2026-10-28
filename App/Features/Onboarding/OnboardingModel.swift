@@ -19,6 +19,8 @@ final class OnboardingModel {
     // Device check
     private(set) var device: DeviceStatus?
     private(set) var deviceChecked = false
+    /// Google Health has no profile for the signed-in Google account.
+    private(set) var accountNotLinked = false
     private(set) var historyLoaded = false
 
     // Goals (smart defaults: one tap continues)
@@ -77,7 +79,15 @@ final class OnboardingModel {
     func checkDevice() async {
         deviceChecked = false
         historyLoaded = false
-        device = try? await services.source.device()
+        accountNotLinked = false
+        do {
+            device = try await services.source.device()
+        } catch GoogleHealthError.accountNotLinked {
+            device = nil
+            accountNotLinked = true
+        } catch {
+            device = nil
+        }
         deviceChecked = true
         await health.sync()
         historyLoaded = true
@@ -163,6 +173,8 @@ final class OnboardingModel {
             "Google sign-in was declined. The app needs it to read your Fitbit Air data."
         case GoogleAuthError.missingIDToken, GoogleAuthError.stateMismatch, GoogleAuthError.missingCode:
             "Google sign-in didn't finish. Please try again."
+        case GoogleHealthError.accountNotLinked:
+            GoogleHealthError.accountNotLinkedMessage
         case is URLError:
             "You're offline. Connect to the internet and try again."
         default:
