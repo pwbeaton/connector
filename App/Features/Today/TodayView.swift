@@ -133,7 +133,7 @@ struct DayPage: View {
                                                             weekStart: health.today.weekStart))
                 }
                 Text("Scores are estimates to guide training, not medical advice.")
-                    .font(.caption)
+                    .font(.app(.caption))
                     .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity)
                     .padding(.top, 8)
@@ -170,7 +170,7 @@ struct DayPage: View {
         VStack(alignment: .leading, spacing: 6) {
             Text(Format.dayTitle(date)).sectionLabel()
             HStack(alignment: .center, spacing: 12) {
-                Text(title).font(.largeTitle.bold()).foregroundStyle(Theme.textPrimary)
+                Text(title).font(.app(.largeTitle, .bold)).foregroundStyle(Theme.textPrimary)
                     .contentTransition(.opacity)
                 if isToday && health.isSyncing { ProgressView() }
                 Spacer()
@@ -179,12 +179,12 @@ struct DayPage: View {
             }
             if isToday, let device = health.device {
                 Label(deviceLine(device), systemImage: "applewatch.side.right")
-                    .font(.footnote)
+                    .font(.app(.footnote))
                     .foregroundStyle(Theme.textSecondary)
             }
             if isToday && showsSwipeHint {
                 Label("Swipe right to see earlier days", systemImage: "hand.draw")
-                    .font(.footnote)
+                    .font(.app(.footnote))
                     .foregroundStyle(Theme.textSecondary)
             }
             if !isToday {
@@ -192,7 +192,7 @@ struct DayPage: View {
                     move(date.days(until: health.today))
                 } label: {
                     Label("Back to today", systemImage: "arrow.uturn.forward")
-                        .font(.footnote.weight(.semibold))
+                        .font(.app(.footnote, .semibold))
                         .padding(.horizontal, 12).padding(.vertical, 6)
                         .background(Theme.surface, in: Capsule())
                 }
@@ -205,7 +205,7 @@ struct DayPage: View {
     private func dayButton(_ symbol: String, label: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .font(.subheadline.weight(.bold))
+                .font(.app(.subheadline, .bold))
                 .frame(width: 36, height: 36)
                 .background(Theme.surface, in: Circle())
         }
@@ -271,21 +271,21 @@ struct RecoveryCard: View {
                 ScoreDial(value: recovery.total, color: recovery.band.color, size: 210, label: "Recovery")
                 VStack(spacing: 6) {
                     Text(recovery.band.title.uppercased())
-                        .font(.headline.weight(.heavy)).tracking(2)
+                        .font(.app(.headline, .heavy)).tracking(2)
                         .foregroundStyle(recovery.band.color)
                     Text(recovery.band.advice)
-                        .font(.subheadline).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+                        .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
                     ChangeLabel(change: change)
                 }
             case .calibrating(let nights):
                 ScoreDial(value: nil, color: Theme.textSecondary, size: 210, label: "Calibrating",
                           placeholder: "\(min(nights, ScoreTuning.baselineMinimumNights))/\(ScoreTuning.baselineMinimumNights)")
                 Text("Recovery unlocks after \(ScoreTuning.baselineMinimumNights) nights of HRV. Keep wearing your Fitbit Air to bed.")
-                    .font(.subheadline).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+                    .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
             case .unavailable:
                 ScoreDial(value: nil, color: Theme.textSecondary, size: 210, label: "Recovery")
                 Text("No HRV from last night yet. It appears after your Fitbit Air syncs in the morning.")
-                    .font(.subheadline).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
+                    .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary).multilineTextAlignment(.center)
             }
             HStack {
                 StatPill(title: "HRV", value: record?.hrvMs.map { "\(Int($0.rounded())) ms" } ?? "—")
@@ -314,9 +314,9 @@ struct SleepCard: View {
                 .frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: 2) {
                 Text(record?.sleep.map { Format.duration(minutes: $0.minutesAsleep) } ?? "No sleep data")
-                    .font(.headline).foregroundStyle(Theme.textPrimary)
+                    .font(.app(.headline)).foregroundStyle(Theme.textPrimary)
                 Text("Goal \(Format.duration(minutes: goals.sleepMinutes))")
-                    .font(.caption).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                 ChangeLabel(change: change)
                     .padding(.top, 2)
             }
@@ -339,13 +339,13 @@ struct EffortCard: View {
             ScoreDial(value: scores?.effort, color: Theme.effort, size: 96, lineWidth: 10)
                 .frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: 2) {
-                Text(statusText).font(.headline).foregroundStyle(Theme.textPrimary)
+                Text(statusText).font(.app(.headline)).foregroundStyle(Theme.textPrimary)
                 Text(scores.map { "Target \($0.effortTarget.lowerBound)–\($0.effortTarget.upperBound)" } ?? "Target —")
-                    .font(.caption).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                 Group {
                     if isToday {
                         if let yesterday {
-                            Text("Yesterday \(yesterday)").font(.caption.weight(.semibold)).monospacedDigit()
+                            Text("Yesterday \(yesterday)").font(.app(.caption, .semibold)).monospacedDigit()
                                 .foregroundStyle(Theme.textSecondary)
                         }
                     } else {
@@ -378,16 +378,16 @@ struct SleepTipCard: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: tip.symbol)
-                .font(.title3)
+                .font(.app(.title3))
                 .foregroundStyle(Theme.sleep)
                 .frame(width: 40, height: 40)
                 .background(Theme.sleep.opacity(0.15), in: Circle())
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 4) {
                 Text(isToday ? "Tonight's sleep tip" : "Sleep tip").sectionLabel()
-                Text(tip.title).font(.headline).foregroundStyle(Theme.textPrimary)
+                Text(tip.title).font(.app(.headline)).foregroundStyle(Theme.textPrimary)
                 Text(tip.detail)
-                    .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -410,11 +410,11 @@ struct EffortTargetCard: View {
                     Text(isToday ? "Today's Effort target" : "Effort target").sectionLabel()
                     Spacer()
                     Text("\(scores.effortTarget.lowerBound)–\(scores.effortTarget.upperBound)")
-                        .font(.headline).monospacedDigit().foregroundStyle(Theme.effort)
+                        .font(.app(.headline)).monospacedDigit().foregroundStyle(Theme.effort)
                 }
                 EffortTrack(effort: scores.effort, target: scores.effortTarget)
                 Text(coaching(scores))
-                    .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             .card()
@@ -463,7 +463,7 @@ struct StreaksRow: View {
             } icon: {
                 Image(systemName: "shield.fill").foregroundStyle(Theme.effort)
             }
-            .font(.caption)
+            .font(.app(.caption))
             .foregroundStyle(Theme.textSecondary)
             .padding(.top, 2)
         }
@@ -476,12 +476,12 @@ struct StreaksRow: View {
                     .foregroundStyle(state.current > 0 ? Theme.recoverySteady : Theme.textSecondary)
                 Text("\(state.current)").font(.scoreNumber(24)).foregroundStyle(Theme.textPrimary)
             }
-            Text(shortTitle(kind)).font(.caption.weight(.semibold)).foregroundStyle(Theme.textSecondary)
+            Text(shortTitle(kind)).font(.app(.caption, .semibold)).foregroundStyle(Theme.textSecondary)
                 .lineLimit(1).minimumScaleFactor(0.8)
             HStack(spacing: 2) {
                 ForEach(0..<ScoreTuning.maxRestTokens, id: \.self) { index in
                     Image(systemName: index < state.restTokens ? "shield.fill" : "shield")
-                        .font(.caption2)
+                        .font(.app(.caption2))
                         .foregroundStyle(index < state.restTokens ? Theme.effort : Theme.hairline)
                 }
             }
@@ -518,11 +518,11 @@ struct ChallengesSection: View {
                         HStack(alignment: .firstTextBaseline) {
                             Image(systemName: challenge.isComplete ? "checkmark.seal.fill" : "target")
                                 .foregroundStyle(challenge.isComplete ? Theme.recoveryGo : Theme.effort)
-                            Text(challenge.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                            Text(challenge.title).font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                                 .fixedSize(horizontal: false, vertical: true)
                             Spacer(minLength: 8)
                             Text("\(Format.count(challenge.progress))/\(Format.count(challenge.target))")
-                                .font(.caption).monospacedDigit().foregroundStyle(Theme.textSecondary)
+                                .font(.app(.caption)).monospacedDigit().foregroundStyle(Theme.textSecondary)
                         }
                         ProgressBar(fraction: challenge.fraction, color: challenge.isComplete ? Theme.recoveryGo : Theme.effort)
                     }
@@ -533,11 +533,11 @@ struct ChallengesSection: View {
                     HStack {
                         Image(systemName: "person.3.fill").foregroundStyle(Theme.effort)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Group challenge").font(.caption).foregroundStyle(Theme.textSecondary)
-                            Text(group.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                            Text("Group challenge").font(.app(.caption)).foregroundStyle(Theme.textSecondary)
+                            Text(group.title).font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                         }
                         Spacer()
-                        Image(systemName: "chevron.right").font(.footnote).foregroundStyle(Theme.textSecondary)
+                        Image(systemName: "chevron.right").font(.app(.footnote)).foregroundStyle(Theme.textSecondary)
                     }
                 }
                 .buttonStyle(.plain)

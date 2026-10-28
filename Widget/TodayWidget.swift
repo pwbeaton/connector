@@ -66,7 +66,7 @@ struct TodayWidgetView: View {
     private var small: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Recovery").font(.caption2.weight(.bold)).textCase(.uppercase).foregroundStyle(Theme.textSecondary)
+                Text("Recovery").font(.app(.caption2, .bold)).textCase(.uppercase).foregroundStyle(Theme.textSecondary)
                 Spacer()
                 streak
             }
@@ -76,7 +76,7 @@ struct TodayWidgetView: View {
                 .frame(width: 84, height: 84)
                 .frame(maxWidth: .infinity)
             Spacer(minLength: 0)
-            Text(footer).font(.caption2.weight(.semibold)).foregroundStyle(recoveryColor)
+            Text(footer).font(.app(.caption2, .semibold)).foregroundStyle(recoveryColor)
                 .frame(maxWidth: .infinity)
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
@@ -87,7 +87,7 @@ struct TodayWidgetView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text(entry.isStale && !entry.isSample ? "Open to sync" : "Today")
-                    .font(.caption.weight(.bold)).textCase(.uppercase).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption, .bold)).textCase(.uppercase).foregroundStyle(Theme.textSecondary)
                 Spacer()
                 streak
             }
@@ -99,7 +99,7 @@ struct TodayWidgetView: View {
             }
             Text("Effort target \(snapshot.effortTargetLow)–\(snapshot.effortTargetHigh)"
                  + (snapshot.steps.map { " · \($0.formatted()) steps" } ?? ""))
-                .font(.caption2).foregroundStyle(Theme.textSecondary)
+                .font(.app(.caption2)).foregroundStyle(Theme.textSecondary)
                 .frame(maxWidth: .infinity)
         }
     }
@@ -108,7 +108,7 @@ struct TodayWidgetView: View {
         VStack(spacing: 4) {
             WidgetRing(value: value, color: color, lineWidth: 7, placeholder: placeholder)
                 .frame(width: 62, height: 62)
-            Text(title).font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary)
+            Text(title).font(.app(.caption2, .semibold)).foregroundStyle(Theme.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -118,7 +118,7 @@ struct TodayWidgetView: View {
             Image(systemName: "flame.fill").foregroundStyle(snapshot.streakDays > 0 ? Theme.recoverySteady : Theme.textSecondary)
             Text("\(snapshot.streakDays)").monospacedDigit().foregroundStyle(Theme.textPrimary)
         }
-        .font(.caption.weight(.bold))
+        .font(.app(.caption, .bold))
     }
 
     private var recoveryColor: Color {
@@ -156,7 +156,7 @@ struct WidgetRing: View {
                 .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Text(value.map(String.init) ?? placeholder)
-                .font(.system(size: value == nil ? 14 : 22, weight: .bold, design: .rounded).monospacedDigit())
+                .font(.scoreNumber(value == nil ? 14 : 22))
                 .foregroundStyle(Theme.textPrimary)
                 .minimumScaleFactor(0.6)
                 .padding(lineWidth)

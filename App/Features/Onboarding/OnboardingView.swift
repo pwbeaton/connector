@@ -40,9 +40,9 @@ struct OnboardingPage<Content: View, Buttons: View>: View {
         VStack(spacing: 0) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text(title).font(.largeTitle.bold()).foregroundStyle(Theme.textPrimary)
+                    Text(title).font(.app(.largeTitle, .bold)).foregroundStyle(Theme.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(message).font(.body).foregroundStyle(Theme.textSecondary)
+                    Text(message).font(.app(.body)).foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                     content
                 }
@@ -71,12 +71,12 @@ struct WelcomeView: View {
                 .frame(height: 220)
             VStack(spacing: 12) {
                 Text("Train together.\nRecover smarter.")
-                    .font(.system(.largeTitle, design: .rounded).weight(.heavy))
+                    .font(.app(.largeTitle, .black))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textPrimary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Daily Recovery, Sleep, and Effort scores from your Fitbit Air, plus streaks, challenges, and leaderboards with friends.")
-                    .font(.callout)
+                    .font(.app(.callout))
                     .multilineTextAlignment(.center)
                     .foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -86,7 +86,7 @@ struct WelcomeView: View {
             Spacer(minLength: 24)
             VStack(spacing: 14) {
                 if let error = model.errorMessage {
-                    Text(error).font(.footnote).foregroundStyle(Theme.recoveryRest).multilineTextAlignment(.center)
+                    Text(error).font(.app(.footnote)).foregroundStyle(Theme.recoveryRest).multilineTextAlignment(.center)
                 }
                 Button {
                     Task { await model.continueWithGoogle(authenticate: authenticate) }
@@ -100,13 +100,13 @@ struct WelcomeView: View {
                 .disabled(model.isBusy)
                 if let exploreSampleData {
                     Button("Explore with sample data") { exploreSampleData() }
-                        .font(.subheadline.weight(.semibold))
+                        .font(.app(.subheadline, .semibold))
                         .foregroundStyle(Theme.effort)
                         .disabled(model.isBusy)
                 }
                 Label("Your raw health data stays on this iPhone. Friends see only the daily scores you choose to share.",
                       systemImage: "lock.fill")
-                    .font(.caption)
+                    .font(.app(.caption))
                     .foregroundStyle(Theme.textSecondary)
                     .multilineTextAlignment(.center)
             }
@@ -188,15 +188,15 @@ struct DeviceCheckView: View {
         HStack(spacing: 14) {
             ZStack {
                 if done {
-                    Image(systemName: "checkmark.circle.fill").font(.title2).foregroundStyle(Theme.recoveryGo)
+                    Image(systemName: "checkmark.circle.fill").font(.app(.title2)).foregroundStyle(Theme.recoveryGo)
                 } else {
                     ProgressView()
                 }
             }
             .frame(width: 32)
             VStack(alignment: .leading, spacing: 2) {
-                Text(title).font(.headline).foregroundStyle(Theme.textPrimary)
-                Text(detail).font(.subheadline).foregroundStyle(Theme.textSecondary)
+                Text(title).font(.app(.headline)).foregroundStyle(Theme.textPrimary)
+                Text(detail).font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
             }
             Spacer(minLength: 0)
         }
@@ -233,7 +233,7 @@ struct GoalsView: View {
     private func goalCard<Control: View>(title: String, value: String, color: Color, symbol: String,
                                          @ViewBuilder control: () -> Control) -> some View {
         HStack {
-            Image(systemName: symbol).font(.title2).foregroundStyle(color).frame(width: 32)
+            Image(systemName: symbol).font(.app(.title2)).foregroundStyle(color).frame(width: 32)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).sectionLabel()
                 Text(value).font(.scoreNumber(28)).foregroundStyle(Theme.textPrimary)
@@ -272,7 +272,7 @@ struct GroupStepView: View {
                                     .overlay(Circle().stroke(Theme.surface, lineWidth: 2))
                             }
                             Text("\(preview.name) · \(preview.members.count) members")
-                                .font(.subheadline.weight(.semibold))
+                                .font(.app(.subheadline, .semibold))
                                 .foregroundStyle(Theme.textPrimary)
                                 .padding(.leading, 16)
                         }
@@ -286,7 +286,7 @@ struct GroupStepView: View {
                 Text("Or start a group").sectionLabel().padding(.top, 8)
                 VStack(alignment: .leading, spacing: 12) {
                     TextField("Group name, e.g. Morning Crew", text: $model.newGroupName)
-                        .font(.title3)
+                        .font(.app(.title3))
                         .focused($focusedField, equals: .name)
                         .submitLabel(.done)
                     Button("Create group") { Task { await model.createGroup() } }
@@ -296,12 +296,12 @@ struct GroupStepView: View {
                 .card()
 
                 if let error = model.errorMessage {
-                    Text(error).font(.footnote).foregroundStyle(Theme.recoveryRest)
+                    Text(error).font(.app(.footnote)).foregroundStyle(Theme.recoveryRest)
                 }
             }
         } buttons: {
             Button("Skip for now") { model.skipGroup() }
-                .font(.subheadline.weight(.semibold))
+                .font(.app(.subheadline, .semibold))
                 .foregroundStyle(Theme.textSecondary)
                 .frame(minHeight: 44)
         }
@@ -328,8 +328,8 @@ struct SharingStepView: View {
                                 if isOn { model.sharing.insert(category) } else { model.sharing.remove(category) }
                             })) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(category.title).font(.headline).foregroundStyle(Theme.textPrimary)
-                                Text(category.detail).font(.footnote).foregroundStyle(Theme.textSecondary)
+                                Text(category.title).font(.app(.headline)).foregroundStyle(Theme.textPrimary)
+                                Text(category.detail).font(.app(.footnote)).foregroundStyle(Theme.textSecondary)
                             }
                         }
                         .padding(.vertical, 10)
@@ -338,7 +338,7 @@ struct SharingStepView: View {
                 }
                 .card()
                 Text("Leaderboards only rank Effort, steps, and sleep. Recovery, HRV, and resting heart rate are never ranked.")
-                    .font(.footnote)
+                    .font(.app(.footnote))
                     .foregroundStyle(Theme.textSecondary)
             }
         } buttons: {

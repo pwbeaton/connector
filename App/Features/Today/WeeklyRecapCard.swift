@@ -8,9 +8,9 @@ struct WeeklyRecapCard: View {
         VStack(alignment: .leading, spacing: 18) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Week of \(recap.weekStart.noon.formatted(.dateTime.month(.abbreviated).day()))")
-                    .font(.caption.weight(.bold)).tracking(1.2).textCase(.uppercase)
+                    .font(.app(.caption, .bold)).tracking(1.2).textCase(.uppercase)
                     .foregroundStyle(Theme.textSecondary)
-                Text("Training camp recap").font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+                Text("Training camp recap").font(.app(.title2, .bold)).foregroundStyle(Theme.textPrimary)
             }
             HStack(spacing: 12) {
                 tile("Recovery", recap.averageRecovery.map(String.init) ?? "—", color: Theme.recoveryGo, caption: "avg")
@@ -26,14 +26,14 @@ struct WeeklyRecapCard: View {
                 Label("\(recap.challengesDone)/\(recap.challengesTotal) challenges", systemImage: "checkmark.seal.fill")
                 Label("\(recap.longestStreak)", systemImage: "flame.fill")
             }
-            .font(.footnote.weight(.semibold))
+            .font(.app(.footnote, .semibold))
             .foregroundStyle(Theme.textPrimary)
             HStack {
                 Label(recap.tier.title, systemImage: "shield.fill")
-                    .font(.headline).foregroundStyle(recap.tier.color)
+                    .font(.app(.headline)).foregroundStyle(recap.tier.color)
                 Spacer()
                 Text((Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String) ?? "Connector")
-                    .font(.caption.weight(.bold)).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption, .bold)).foregroundStyle(Theme.textSecondary)
             }
         }
         .padding(24)
@@ -43,9 +43,9 @@ struct WeeklyRecapCard: View {
 
     private func tile(_ title: String, _ value: String, color: Color, caption: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.caption2.weight(.bold)).textCase(.uppercase).foregroundStyle(Theme.textSecondary)
+            Text(title).font(.app(.caption2, .bold)).textCase(.uppercase).foregroundStyle(Theme.textSecondary)
             Text(value).font(.scoreNumber(28)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.6)
-            Text(caption).font(.caption2).foregroundStyle(Theme.textSecondary)
+            Text(caption).font(.app(.caption2)).foregroundStyle(Theme.textSecondary)
         }
         .padding(14)
         .frame(maxWidth: .infinity, alignment: .leading)

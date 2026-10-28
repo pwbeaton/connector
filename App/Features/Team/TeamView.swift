@@ -26,7 +26,7 @@ struct TeamView: View {
                         FriendCardView(card: card)
                     }
                     Text("Recovery, HRV, and resting heart rate show on cards but are never ranked.")
-                        .font(.caption)
+                        .font(.app(.caption))
                         .foregroundStyle(Theme.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
@@ -52,19 +52,19 @@ struct TeamView: View {
                     } label: {
                         HStack(spacing: 4) {
                             Text(team.selectedGroup?.name ?? "").sectionLabel()
-                            Image(systemName: "chevron.down").font(.caption2).foregroundStyle(Theme.textSecondary)
+                            Image(systemName: "chevron.down").font(.app(.caption2)).foregroundStyle(Theme.textSecondary)
                         }
                     }
                 } else {
                     Text(team.selectedGroup?.name ?? "Your crew").sectionLabel()
                 }
-                Text("Team").font(.largeTitle.bold()).foregroundStyle(Theme.textPrimary)
+                Text("Team").font(.app(.largeTitle, .bold)).foregroundStyle(Theme.textPrimary)
             }
             Spacer()
             if let group = team.selectedGroup {
                 ShareLink(item: InviteText.message(for: group)) {
                     Image(systemName: "person.badge.plus")
-                        .font(.title3)
+                        .font(.app(.title3))
                         .frame(width: 44, height: 44)
                         .background(Theme.surface, in: Circle())
                 }
@@ -97,7 +97,7 @@ struct LeaderboardSection: View {
                 HStack(spacing: 8) {
                     Image(systemName: "trophy.fill").foregroundStyle(Theme.gold)
                     Text("Group challenge: \(groupChallenge.title)")
-                        .font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                        .font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                 }
                 Picker("Metric", selection: Binding(get: { team.leaderboardMetric },
                                                     set: { team.leaderboardMetric = $0 })) {
@@ -111,7 +111,7 @@ struct LeaderboardSection: View {
                 }
                 if team.leaderboard.isEmpty {
                     Text("No shared numbers yet this week.")
-                        .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                        .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                         .padding(.vertical, 8)
                 } else {
                     VStack(spacing: 10) {
@@ -134,11 +134,11 @@ struct LeaderboardSection: View {
                 .frame(width: 24)
             AvatarView(name: entry.displayName, url: entry.avatarURL.flatMap(URL.init(string:)), size: 32)
             Text(isYou ? "You" : entry.displayName)
-                .font(.subheadline.weight(isYou ? .bold : .medium))
+                .font(.app(.subheadline, isYou ? .bold : .medium))
                 .foregroundStyle(Theme.textPrimary)
             Spacer()
             Text(Format.leaderboard(entry.value, metric: team.leaderboardMetric))
-                .font(.subheadline.weight(.semibold)).monospacedDigit()
+                .font(.app(.subheadline, .semibold)).monospacedDigit()
                 .foregroundStyle(isYou ? Theme.effort : Theme.textPrimary)
         }
         .accessibilityElement(children: .combine)
@@ -157,9 +157,9 @@ struct FriendCardView: View {
                 AvatarView(name: card.member.profile.displayName, url: card.member.profile.avatarURL, size: 40)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(card.isYou ? "You" : card.member.profile.displayName)
-                        .font(.headline).foregroundStyle(Theme.textPrimary)
+                        .font(.app(.headline)).foregroundStyle(Theme.textPrimary)
                     Text(card.hasData ? subtitle : "Not synced yet today")
-                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                        .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
                 recoveryBadge
@@ -184,7 +184,7 @@ struct FriendCardView: View {
         if let recovery = card.recovery, let band = card.recoveryBand {
             VStack(spacing: 0) {
                 Text("\(recovery)").font(.scoreNumber(22)).foregroundStyle(band.color)
-                Text(band.title.uppercased()).font(.system(size: 9, weight: .heavy)).tracking(1).foregroundStyle(band.color)
+                Text(band.title.uppercased()).font(.app(size: 9, weight: .heavy)).tracking(1).foregroundStyle(band.color)
             }
             .frame(width: 64, height: 48)
             .background(band.color.opacity(0.14), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -206,7 +206,7 @@ struct FriendCardView: View {
                     Task { await session.team.toggleReaction(reaction.emoji, on: card) }
                 } label: {
                     Text("\(reaction.emoji) \(reaction.count)")
-                        .font(.subheadline.weight(.semibold)).monospacedDigit()
+                        .font(.app(.subheadline, .semibold)).monospacedDigit()
                         .padding(.horizontal, 10).frame(minHeight: 32)
                         .background(reaction.mine != nil ? Theme.effort.opacity(0.18) : Theme.surfaceRaised,
                                     in: Capsule())
@@ -223,7 +223,7 @@ struct FriendCardView: View {
                     }
                 } label: {
                     Image(systemName: "face.smiling")
-                        .font(.subheadline)
+                        .font(.app(.subheadline))
                         .frame(width: 44, height: 32)
                         .background(Theme.surfaceRaised, in: Capsule())
                 }
@@ -245,10 +245,10 @@ struct JoinInviteBanner: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: "envelope.open.fill").foregroundStyle(Theme.effort).font(.title3)
+            Image(systemName: "envelope.open.fill").foregroundStyle(Theme.effort).font(.app(.title3))
             VStack(alignment: .leading, spacing: 2) {
-                Text("You're invited").font(.headline).foregroundStyle(Theme.textPrimary)
-                Text("Code \(code)").font(.caption).foregroundStyle(Theme.textSecondary)
+                Text("You're invited").font(.app(.headline)).foregroundStyle(Theme.textPrimary)
+                Text("Code \(code)").font(.app(.caption)).foregroundStyle(Theme.textSecondary)
             }
             Spacer()
             Button("Join") {
@@ -281,10 +281,10 @@ struct NoGroupCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Image(systemName: "person.3.fill").font(.largeTitle).foregroundStyle(Theme.effort)
-            Text("Train with friends").font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+            Image(systemName: "person.3.fill").font(.app(.largeTitle)).foregroundStyle(Theme.effort)
+            Text("Train with friends").font(.app(.title2, .bold)).foregroundStyle(Theme.textPrimary)
             Text("Join a group with an invite code, or start one and invite your crew.")
-                .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
             TextField("Invite code", text: $code)
                 .textInputAutocapitalization(.characters)
                 .autocorrectionDisabled()
@@ -300,7 +300,7 @@ struct NoGroupCard: View {
                 .buttonStyle(.secondary)
                 .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
             if let error {
-                Text(error).font(.footnote).foregroundStyle(Theme.recoveryRest)
+                Text(error).font(.app(.footnote)).foregroundStyle(Theme.recoveryRest)
             }
         }
         .card()

@@ -9,6 +9,10 @@ struct AppMain: SwiftUI.App {
     @State private var model = AppModel(options: .from(.standard))
     @Environment(\.scenePhase) private var scenePhase
 
+    init() {
+        Typeface.applyToSystemControls()
+    }
+
     var body: some Scene {
         WindowGroup {
             RootView(model: model)

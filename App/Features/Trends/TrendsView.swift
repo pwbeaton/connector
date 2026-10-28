@@ -12,7 +12,7 @@ struct TrendsView: View {
         let days = health.recentDays(range)
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("Trends").font(.largeTitle.bold()).foregroundStyle(Theme.textPrimary)
+                Text("Trends").font(.app(.largeTitle, .bold)).foregroundStyle(Theme.textPrimary)
                 Picker("Range", selection: $range) {
                     Text("7 days").tag(7)
                     Text("30 days").tag(30)
@@ -91,12 +91,12 @@ struct TrendCard: View {
                 Spacer()
                 if let average {
                     Text("avg \(formatted(average))\(unit.isEmpty ? "" : " \(unit)")")
-                        .font(.subheadline.weight(.semibold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+                        .font(.app(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
                 }
             }
             if points.isEmpty {
                 Text("No data in this period.")
-                    .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity, minHeight: 120)
             } else {
                 chart.frame(height: 150)
@@ -177,13 +177,13 @@ struct RecordsSection: View {
                 ForEach(records) { record in
                     HStack {
                         Image(systemName: symbol(record.kind)).foregroundStyle(Theme.gold).frame(width: 28)
-                        Text(record.kind.title).font(.subheadline).foregroundStyle(Theme.textPrimary)
+                        Text(record.kind.title).font(.app(.subheadline)).foregroundStyle(Theme.textPrimary)
                         Spacer()
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(value(record)).font(.subheadline.weight(.semibold)).monospacedDigit()
+                            Text(value(record)).font(.app(.subheadline, .semibold)).monospacedDigit()
                                 .foregroundStyle(Theme.textPrimary)
                             Text(record.date.noon.formatted(.dateTime.month(.abbreviated).day()))
-                                .font(.caption).foregroundStyle(Theme.textSecondary)
+                                .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                         }
                     }
                     .padding(.vertical, 8)
@@ -192,7 +192,7 @@ struct RecordsSection: View {
                 }
                 if records.isEmpty {
                     Text("Records appear after your first synced day.")
-                        .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                        .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }

@@ -36,7 +36,7 @@ struct AvatarView: View {
             .fill(.tint.opacity(0.15))
             .overlay {
                 Text(Initials.from(name))
-                    .font(.system(size: size * 0.4, weight: .semibold, design: .rounded))
+                    .font(.app(size: size * 0.4, weight: .semibold))
                     .foregroundStyle(.tint)
             }
     }

@@ -69,15 +69,15 @@ struct BiologicalAgeCard: View {
                     VStack(alignment: .leading, spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
                             Text(AgeFormat.age(result.biologicalAge))
-                                .font(.scoreNumber(48))
+                                .font(.scoreNumber(48, tabular: false))
                                 .foregroundStyle(color)
                                 .contentTransition(.numericText())
                             Text("vs \(result.chronologicalAge) actual")
-                                .font(.subheadline.weight(.semibold))
+                                .font(.app(.subheadline, .semibold))
                                 .foregroundStyle(Theme.textSecondary)
                         }
                         Text(AgeFormat.difference(result.difference))
-                            .font(.subheadline).foregroundStyle(Theme.textPrimary)
+                            .font(.app(.subheadline)).foregroundStyle(Theme.textPrimary)
                     }
                     Spacer(minLength: 0)
                     if history.count >= 2 {
@@ -86,13 +86,13 @@ struct BiologicalAgeCard: View {
                 }
                 if let trend {
                     Label(AgeFormat.trend(trend, on: result.date), systemImage: trend.direction.symbol)
-                        .font(.footnote.weight(.semibold))
+                        .font(.app(.footnote, .semibold))
                         .foregroundStyle(trend.direction.color)
                         .padding(.horizontal, 10).padding(.vertical, 6)
                         .background(trend.direction.color.opacity(0.14), in: Capsule())
                 } else {
                     Text("Your trend appears after another week of data.")
-                        .font(.footnote).foregroundStyle(Theme.textSecondary)
+                        .font(.app(.footnote)).foregroundStyle(Theme.textSecondary)
                 }
             } else if !hasAge {
                 placeholder(symbol: "person.text.rectangle",
@@ -112,8 +112,8 @@ struct BiologicalAgeCard: View {
 
     private func placeholder(symbol: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 12) {
-            Image(systemName: symbol).font(.title3).foregroundStyle(Theme.effort).accessibilityHidden(true)
-            Text(text).font(.subheadline).foregroundStyle(Theme.textSecondary)
+            Image(systemName: symbol).font(.app(.title3)).foregroundStyle(Theme.effort).accessibilityHidden(true)
+            Text(text).font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -162,13 +162,13 @@ struct BiologicalAgeDetailView: View {
                         Text(health.chronologicalAge == nil
                              ? "Add your age below to see your biological age."
                              : "Biological age needs \(BiologicalAge.minimumDays) days of data in the last \(BiologicalAge.windowDays). Keep wearing your Fitbit Air.")
-                            .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                            .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                             .card()
                     }
                     settingsCard
                     methodCard
                     Text("An estimate from population research to guide habits, not a medical test.")
-                        .font(.caption).foregroundStyle(Theme.textSecondary)
+                        .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                         .frame(maxWidth: .infinity)
                 }
                 .padding(Theme.screenPadding)
@@ -186,16 +186,16 @@ struct BiologicalAgeDetailView: View {
         let color = trend?.direction.color ?? Theme.textPrimary
         return VStack(spacing: 8) {
             Text(AgeFormat.age(result.biologicalAge))
-                .font(.scoreNumber(72))
+                .font(.scoreNumber(72, tabular: false))
                 .foregroundStyle(color)
             Text("Biological age · you're \(result.chronologicalAge)")
                 .sectionLabel()
             Text(AgeFormat.difference(result.difference))
-                .font(.headline).foregroundStyle(Theme.textPrimary)
+                .font(.app(.headline)).foregroundStyle(Theme.textPrimary)
             if let trend {
                 Label("\(trend.direction.title): \(AgeFormat.trend(trend, on: date).lowercasedFirst)",
                       systemImage: trend.direction.symbol)
-                    .font(.subheadline.weight(.semibold))
+                    .font(.app(.subheadline, .semibold))
                     .foregroundStyle(trend.direction.color)
             }
         }
@@ -224,7 +224,7 @@ struct BiologicalAgeDetailView: View {
                     .foregroundStyle(Theme.textSecondary.opacity(0.7))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                     .annotation(position: .top, alignment: .leading) {
-                        Text("Your age \(result.chronologicalAge)").font(.caption2).foregroundStyle(Theme.textSecondary)
+                        Text("Your age \(result.chronologicalAge)").font(.app(.caption2)).foregroundStyle(Theme.textSecondary)
                     }
             }
             .chartYScale(domain: low...high)
@@ -235,7 +235,7 @@ struct BiologicalAgeDetailView: View {
             }
             .frame(height: 180)
             Text("Each point uses the \(BiologicalAge.windowDays) days before it, so it moves slowly and rewards steady habits.")
-                .font(.caption).foregroundStyle(Theme.textSecondary)
+                .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
         }
         .card()
     }
@@ -250,13 +250,13 @@ struct BiologicalAgeDetailView: View {
                         Image(systemName: contributor.kind.symbol)
                             .foregroundStyle(Theme.textSecondary).frame(width: 24)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(contributor.kind.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                            Text(contributor.kind.title).font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                             Text("\(contributor.value) · \(contributor.reference)")
-                                .font(.caption).foregroundStyle(Theme.textSecondary)
+                                .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                         }
                         Spacer()
                         Text(yearsText(contributor.years))
-                            .font(.subheadline.weight(.bold)).monospacedDigit()
+                            .font(.app(.subheadline, .bold)).monospacedDigit()
                             .foregroundStyle(yearsColor(contributor.years))
                     }
                     if let years = contributor.years {
@@ -290,27 +290,27 @@ struct BiologicalAgeDetailView: View {
             Text("Your details").sectionLabel()
             HStack {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Age").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
-                    Text(ageSource).font(.caption).foregroundStyle(Theme.textSecondary)
+                    Text("Age").font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
+                    Text(ageSource).font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                 }
                 Spacer()
                 if let age = health.chronologicalAge {
                     Stepper(value: Binding(get: { age }, set: { save(age: $0) }), in: 18...100) {
-                        Text("\(age)").font(.headline).monospacedDigit().foregroundStyle(Theme.textPrimary)
+                        Text("\(age)").font(.app(.headline)).monospacedDigit().foregroundStyle(Theme.textPrimary)
                     }
                     .fixedSize()
                 } else {
-                    Button("Add age") { save(age: 30) }.font(.subheadline.weight(.semibold))
+                    Button("Add age") { save(age: 30) }.font(.app(.subheadline, .semibold))
                 }
             }
             if health.state.ageOverride != nil, let profileAge = health.profileAge {
                 Button("Use my Google Health age (\(profileAge))") {
                     Task { await health.updateBiologicalAgeSettings(ageOverride: nil, sex: health.sex) }
                 }
-                .font(.footnote.weight(.semibold))
+                .font(.app(.footnote, .semibold))
             }
             VStack(alignment: .leading, spacing: 8) {
-                Text("Fitness norms").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                Text("Fitness norms").font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                 Picker("Fitness norms", selection: Binding(get: { health.sex }, set: { sex in
                     Task { await health.updateBiologicalAgeSettings(ageOverride: health.state.ageOverride, sex: sex) }
                 })) {
@@ -319,7 +319,7 @@ struct BiologicalAgeDetailView: View {
                 }
                 .pickerStyle(.segmented)
                 Text("VO₂ max and resting heart rate norms differ between men and women. Google Health doesn't share this, so it's set here and stays on this iPhone.")
-                    .font(.caption).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -342,14 +342,14 @@ struct BiologicalAgeDetailView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("How it's calculated").sectionLabel()
             Text("Large studies tie each of these metrics to the risk of dying from any cause. Risk rises about 10% with each year of adult age, so a metric's extra or reduced risk converts into years (the method behind WHOOP Age, heart age, and lung age). Your biological age is your age plus those years, using your last \(BiologicalAge.windowDays) days. Overlapping pairs (VO₂ max and resting heart rate; steps and Active Zone Minutes) count at \(Int(BiologicalAge.overlapShare * 100))% so the same fitness isn't counted twice. HRV isn't used because it varies too much between people to compare against population norms.")
-                .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             VStack(alignment: .leading, spacing: 6) {
                 ForEach(Array(Self.sources.enumerated()), id: \.offset) { _, source in
                     Link(destination: source.url) {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Image(systemName: "doc.text").font(.caption)
-                            Text(source.title).font(.caption).multilineTextAlignment(.leading)
+                            Image(systemName: "doc.text").font(.app(.caption))
+                            Text(source.title).font(.app(.caption)).multilineTextAlignment(.leading)
                         }
                     }
                 }

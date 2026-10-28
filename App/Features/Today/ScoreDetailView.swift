@@ -56,7 +56,7 @@ struct ScoreDetailView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("How it's calculated").sectionLabel()
                         Text(kind.explanation)
-                            .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                            .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .card()
@@ -88,7 +88,7 @@ struct ScoreDetailView: View {
                 .font(.scoreNumber(72))
                 .foregroundStyle(valueColor)
             if kind == .effort && date == health.today {
-                Text("Still building today").font(.caption).foregroundStyle(Theme.textSecondary)
+                Text("Still building today").font(.app(.caption)).foregroundStyle(Theme.textSecondary)
             } else {
                 ChangeLabel(change: health.dayChange(kind, on: date), tint: kind == .effort ? Theme.effort : nil)
             }
@@ -109,7 +109,7 @@ struct ScoreDetailView: View {
         case .flat: ("arrow.right", "Holding steady: 7-day average \(average), about the same as the week before", Theme.textSecondary)
         }
         return Label(text, systemImage: symbol)
-            .font(.footnote.weight(.semibold))
+            .font(.app(.footnote, .semibold))
             .foregroundStyle(color)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 12).padding(.vertical, 8)
@@ -149,11 +149,11 @@ struct ScoreDetailView: View {
                 Text("Last \(range) days").sectionLabel()
                 Spacer()
                 Label("7-day average", systemImage: "line.diagonal")
-                    .font(.caption2).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption2)).foregroundStyle(Theme.textSecondary)
             }
             if points.isEmpty {
                 Text("No data in this period.")
-                    .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity, minHeight: 160)
             } else {
                 Chart {
@@ -252,11 +252,11 @@ struct ScoreDetailView: View {
                 let (name, points, maximum, detail) = part
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(name).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
-                        if let detail { Text(detail).font(.caption).foregroundStyle(Theme.textSecondary) }
+                        Text(name).font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
+                        if let detail { Text(detail).font(.app(.caption)).foregroundStyle(Theme.textSecondary) }
                         Spacer()
                         Text(points.map { "\(Int($0.rounded()))/\(Int(maximum))" } ?? "no data")
-                            .font(.caption.weight(.semibold)).monospacedDigit().foregroundStyle(Theme.textSecondary)
+                            .font(.app(.caption, .semibold)).monospacedDigit().foregroundStyle(Theme.textSecondary)
                     }
                     ProgressBar(fraction: (points ?? 0) / maximum, color: kind.color, height: 6)
                 }

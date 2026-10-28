@@ -37,10 +37,58 @@ enum Theme {
     static let buttonHeight: CGFloat = 54
 }
 
+/// The app's typeface: Satoshi by Indian Type Foundry (ITF Free Font License), a modernist
+/// grotesk with tabular figures. The font files live in Shared/Fonts but are git-ignored
+/// (the license forbids public redistribution): run scripts/fetch-fonts.sh after cloning.
+/// Without them, text falls back to the system font.
+enum Typeface {
+    static func name(_ weight: Font.Weight) -> String {
+        switch weight {
+        case .black, .heavy: "Satoshi-Black"
+        case .bold, .semibold: "Satoshi-Bold"
+        case .medium: "Satoshi-Medium"
+        default: "Satoshi-Regular"
+        }
+    }
+
+    /// iOS's default point sizes for each text style (Dynamic Type scales from these).
+    static func size(_ style: Font.TextStyle) -> CGFloat {
+        switch style {
+        case .largeTitle: 34
+        case .title: 28
+        case .title2: 22
+        case .title3: 20
+        case .headline, .body: 17
+        case .callout: 16
+        case .subheadline: 15
+        case .footnote: 13
+        case .caption: 12
+        case .caption2: 11
+        default: 17
+        }
+    }
+
+    static func defaultWeight(_ style: Font.TextStyle) -> Font.Weight {
+        style == .headline ? .bold : .regular
+    }
+}
+
 extension Font {
-    /// Big score numerals: rounded, with fixed-width digits so they don't jiggle.
-    static func scoreNumber(_ size: CGFloat) -> Font {
-        .system(size: size, weight: .bold, design: .rounded).monospacedDigit()
+    /// App text in a given style, scaling with the user's text size.
+    static func app(_ style: Font.TextStyle, _ weight: Font.Weight? = nil) -> Font {
+        .custom(Typeface.name(weight ?? Typeface.defaultWeight(style)), size: Typeface.size(style), relativeTo: style)
+    }
+
+    /// App text at a fixed size (small decorations and icons).
+    static func app(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        .custom(Typeface.name(weight), fixedSize: size)
+    }
+
+    /// Big score numerals. Fixed-width digits by default so counting animations don't jiggle;
+    /// pass `tabular: false` for decimals like "25.9", where tabular spacing leaves gaps.
+    static func scoreNumber(_ size: CGFloat, tabular: Bool = true) -> Font {
+        let font = Font.custom(Typeface.name(.bold), fixedSize: size)
+        return tabular ? font.monospacedDigit() : font
     }
 }
 
@@ -87,7 +135,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.app(.headline))
             .frame(maxWidth: .infinity, minHeight: Theme.buttonHeight)
             .foregroundStyle(.white)
             .background(Theme.effort, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -99,7 +147,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.headline)
+            .font(.app(.headline))
             .frame(maxWidth: .infinity, minHeight: Theme.buttonHeight)
             .foregroundStyle(Theme.textPrimary)
             .background(Theme.surfaceRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))

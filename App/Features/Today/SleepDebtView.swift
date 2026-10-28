@@ -56,10 +56,10 @@ struct TonightCard: View {
                         Text("Sleep debt").sectionLabel().fixedSize()
                         Spacer(minLength: 8)
                         Text(debtText(debt))
-                            .font(.headline).monospacedDigit()
+                            .font(.app(.headline)).monospacedDigit()
                             .foregroundStyle(debt.level.color)
                             .fixedSize()
-                        Text(debt.level.title).font(.caption).foregroundStyle(Theme.textSecondary).fixedSize()
+                        Text(debt.level.title).font(.app(.caption)).foregroundStyle(Theme.textSecondary).fixedSize()
                     }
                 }
             }
@@ -70,7 +70,7 @@ struct TonightCard: View {
 
     private var moon: some View {
         Image(systemName: "moon.stars.fill")
-            .font(.title3)
+            .font(.app(.title3))
             .foregroundStyle(Theme.sleep)
             .frame(width: 44, height: 44)
             .background(Theme.sleep.opacity(0.15), in: Circle())
@@ -87,7 +87,7 @@ struct TonightCard: View {
             if let shift = BedtimeFormat.shift(plan.shiftFromUsual) {
                 Label(shift, systemImage: BedtimeFormat.shiftSymbol(plan.shiftFromUsual))
                     .labelStyle(TightLabelStyle())
-                    .font(.caption.weight(.semibold))
+                    .font(.app(.caption, .semibold))
                     .foregroundStyle(Theme.sleep)
                     .fixedSize(horizontal: !wrapsShift, vertical: true)
             }
@@ -98,9 +98,9 @@ struct TonightCard: View {
         VStack(alignment: .trailing, spacing: 3) {
             Text("Sleep debt").sectionLabel()
             Text(debtText(debt))
-                .font(.headline).monospacedDigit()
+                .font(.app(.headline)).monospacedDigit()
                 .foregroundStyle(debt.level.color)
-            Text(debt.level.title).font(.caption).foregroundStyle(Theme.textSecondary)
+            Text(debt.level.title).font(.app(.caption)).foregroundStyle(Theme.textSecondary)
         }
         .fixedSize()
     }
@@ -114,7 +114,7 @@ struct TonightCard: View {
 struct TightLabelStyle: LabelStyle {
     func makeBody(configuration: Configuration) -> some View {
         HStack(spacing: 4) {
-            configuration.icon.font(.system(size: 8, weight: .bold))
+            configuration.icon.font(.app(size: 8, weight: .bold))
             configuration.title
         }
     }
@@ -133,7 +133,7 @@ struct SleepDebtCard: View {
                 Text("Sleep debt").sectionLabel()
                 Spacer()
                 Text(debt.level.title)
-                    .font(.caption.weight(.bold))
+                    .font(.app(.caption, .bold))
                     .foregroundStyle(debt.level.color)
                     .padding(.horizontal, 10).padding(.vertical, 4)
                     .background(debt.level.color.opacity(0.15), in: Capsule())
@@ -142,7 +142,7 @@ struct SleepDebtCard: View {
                 .font(.scoreNumber(40))
                 .foregroundStyle(debt.level.color)
             Text("What you owe against your \(Format.duration(minutes: debt.goalMinutes)) sleep goal over the last \(ScoreTuning.sleepDebtNights) nights. Recent nights count more, and nights over your goal pay it down. Under 5 hours is the range to aim for.")
-                .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
             chart.frame(height: 120)
             if let plan {
@@ -150,7 +150,7 @@ struct SleepDebtCard: View {
                 planView(plan)
             }
             Text("One hour of sleep debt takes about four nights of extra sleep to repay (Kitamura et al., Scientific Reports 2016), so the plan adds a little each night and keeps your wake time fixed.")
-                .font(.caption).foregroundStyle(Theme.textSecondary)
+                .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .card()
@@ -187,13 +187,13 @@ struct SleepDebtCard: View {
     private func planView(_ plan: BedtimePlan) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Tonight").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                Text("Tonight").font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("Bed by \(Format.clock(minuteOfDay: plan.bedtime))")
-                    .font(.headline).monospacedDigit().foregroundStyle(Theme.sleep)
+                    .font(.app(.headline)).monospacedDigit().foregroundStyle(Theme.sleep)
             }
             Text(planText(plan))
-                .font(.subheadline).foregroundStyle(Theme.textSecondary)
+                .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

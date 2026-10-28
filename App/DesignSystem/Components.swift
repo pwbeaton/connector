@@ -145,8 +145,8 @@ struct StatPill: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title).font(.caption2.weight(.semibold)).foregroundStyle(Theme.textSecondary).textCase(.uppercase)
-            Text(value).font(.subheadline.weight(.semibold)).monospacedDigit().foregroundStyle(color)
+            Text(title).font(.app(.caption2, .semibold)).foregroundStyle(Theme.textSecondary).textCase(.uppercase)
+            Text(value).font(.app(.subheadline, .semibold)).monospacedDigit().foregroundStyle(color)
                 .lineLimit(1).minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -166,10 +166,10 @@ struct SectionTitle: View {
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.title3.weight(.bold)).foregroundStyle(Theme.textPrimary)
+            Text(title).font(.app(.title3, .bold)).foregroundStyle(Theme.textPrimary)
             Spacer()
             if let trailing {
-                Text(trailing).font(.footnote).foregroundStyle(Theme.textSecondary)
+                Text(trailing).font(.app(.footnote)).foregroundStyle(Theme.textSecondary)
             }
         }
         .padding(.top, 8)
@@ -188,11 +188,11 @@ struct ChangeLabel: View {
         if let change {
             HStack(spacing: 3) {
                 Image(systemName: change > 0 ? "arrowtriangle.up.fill" : (change < 0 ? "arrowtriangle.down.fill" : "equal"))
-                    .font(.system(size: 8, weight: .bold))
+                    .font(.app(size: 8, weight: .bold))
                 Text(change == 0 ? "Same" : "\(abs(change))").monospacedDigit()
-                Text(caption).foregroundStyle(Theme.textSecondary).fontWeight(.regular)
+                Text(caption).foregroundStyle(Theme.textSecondary).font(.app(.caption))
             }
-            .font(.caption.weight(.semibold))
+            .font(.app(.caption, .semibold))
             .foregroundStyle(color(change))
             .lineLimit(1)
             .minimumScaleFactor(0.8)
@@ -225,7 +225,7 @@ extension ButtonStyle where Self == PressableCardStyle {
 struct CardChevron: View {
     var body: some View {
         Image(systemName: "chevron.right")
-            .font(.caption2.weight(.bold))
+            .font(.app(.caption2, .bold))
             .foregroundStyle(Theme.textSecondary.opacity(0.7))
             .accessibilityHidden(true)
     }
@@ -241,11 +241,11 @@ struct Banner: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: symbol).foregroundStyle(color).font(.title3)
-            Text(message).font(.subheadline).foregroundStyle(Theme.textPrimary)
+            Image(systemName: symbol).foregroundStyle(color).font(.app(.title3))
+            Text(message).font(.app(.subheadline)).foregroundStyle(Theme.textPrimary)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let actionTitle, let action {
-                Button(actionTitle, action: action).font(.subheadline.weight(.semibold)).tint(color)
+                Button(actionTitle, action: action).font(.app(.subheadline, .semibold)).tint(color)
             }
         }
         .card()

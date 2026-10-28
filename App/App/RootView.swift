@@ -13,6 +13,7 @@ struct RootView: View {
             }
         }
         .tint(Theme.effort)
+        .font(.app(.body))
         .environment(\.animatesScores, !model.options.isScreenshotMode)
         .environment(\.exploreSampleData, exploreSampleData)
         .environment(\.exitSampleData, exitSampleData)
@@ -94,10 +95,10 @@ struct SetupNeededView: View {
         VStack(spacing: 24) {
             Spacer()
             Image(systemName: "wrench.and.screwdriver")
-                .font(.system(size: 48))
+                .font(.app(size: 48))
                 .foregroundStyle(Theme.effort)
                 .accessibilityHidden(true)
-            Text("Setup needed").font(.title.bold()).foregroundStyle(Theme.textPrimary)
+            Text("Setup needed").font(.app(.title, .bold)).foregroundStyle(Theme.textPrimary)
             Text(message)
                 .multilineTextAlignment(.center)
                 .foregroundStyle(Theme.textSecondary)

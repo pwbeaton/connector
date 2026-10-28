@@ -48,6 +48,11 @@ targets:
       path: Config/Generated/App-Info.plist
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        UIAppFonts:
+          - Satoshi-Regular.otf
+          - Satoshi-Medium.otf
+          - Satoshi-Bold.otf
+          - Satoshi-Black.otf
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)
         LSRequiresIPhoneOS: true
@@ -109,6 +114,11 @@ targets:
       path: Config/Generated/Widget-Info.plist
       properties:
         CFBundleDisplayName: $(APP_DISPLAY_NAME)
+        UIAppFonts:
+          - Satoshi-Regular.otf
+          - Satoshi-Medium.otf
+          - Satoshi-Bold.otf
+          - Satoshi-Black.otf
         # Must match the app's version, or App Store Connect rejects the upload.
         CFBundleShortVersionString: $(MARKETING_VERSION)
         CFBundleVersion: $(CURRENT_PROJECT_VERSION)

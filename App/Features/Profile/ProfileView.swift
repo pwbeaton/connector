@@ -22,7 +22,7 @@ struct ProfileView: View {
                 trackerSection
                 accountSection
                 Text("Scores are estimates to guide training, not medical advice.\nVersion \(appVersion)")
-                    .font(.caption)
+                    .font(.app(.caption))
                     .foregroundStyle(Theme.textSecondary)
                     .frame(maxWidth: .infinity)
                     .multilineTextAlignment(.center)
@@ -48,9 +48,9 @@ struct ProfileView: View {
         HStack(spacing: 14) {
             AvatarView(name: session.profile?.displayName ?? "You", url: session.profile?.avatarURL, size: 64)
             VStack(alignment: .leading, spacing: 4) {
-                Text(session.profile?.displayName ?? "You").font(.title.bold()).foregroundStyle(Theme.textPrimary)
+                Text(session.profile?.displayName ?? "You").font(.app(.title, .bold)).foregroundStyle(Theme.textPrimary)
                 Label(health.snapshot.tier.tier.title, systemImage: "shield.fill")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.app(.subheadline, .semibold))
                     .foregroundStyle(health.snapshot.tier.tier.color)
             }
             Spacer()
@@ -98,22 +98,22 @@ struct ProfileView: View {
                         Toggle(isOn: Binding(get: { team.isSharing(category) },
                                              set: { on in Task { await team.setSharing(category, enabled: on, today: health.today) } })) {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(category.title).font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
-                                Text(category.detail).font(.caption).foregroundStyle(Theme.textSecondary)
+                                Text(category.title).font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
+                                Text(category.detail).font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                             }
                         }
                         Divider()
                     }
                     Toggle(isOn: Binding(get: { hidesToday }, set: { hide in Task { await setHideToday(hide) } })) {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Hide today").font(.subheadline.weight(.semibold)).foregroundStyle(Theme.textPrimary)
+                            Text("Hide today").font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                             Text("Keep today's numbers from \(group.name). Streaks and scores still count.")
-                                .font(.caption).foregroundStyle(Theme.textSecondary)
+                                .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                         }
                     }
                     Divider()
                     HStack {
-                        Text("Invite code").font(.subheadline).foregroundStyle(Theme.textSecondary)
+                        Text("Invite code").font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                         Spacer()
                         Text(group.inviteCode).font(.system(.subheadline, design: .monospaced).weight(.semibold))
                             .foregroundStyle(Theme.textPrimary).textSelection(.enabled)
@@ -187,9 +187,9 @@ struct ProfileView: View {
     private func settingLabel(_ title: String, value: String, symbol: String, color: Color) -> some View {
         HStack(spacing: 12) {
             Image(systemName: symbol).foregroundStyle(color).frame(width: 24)
-            Text(title).font(.subheadline).foregroundStyle(Theme.textPrimary)
+            Text(title).font(.app(.subheadline)).foregroundStyle(Theme.textPrimary)
             Spacer()
-            Text(value).font(.subheadline.weight(.semibold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+            Text(value).font(.app(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
         }
     }
 
@@ -208,15 +208,15 @@ struct TierCard: View {
             HStack(alignment: .firstTextBaseline) {
                 Text("Training tier").sectionLabel()
                 Spacer()
-                Text("\(tier.consistency)% consistency").font(.caption).monospacedDigit().foregroundStyle(Theme.textSecondary)
+                Text("\(tier.consistency)% consistency").font(.app(.caption)).monospacedDigit().foregroundStyle(Theme.textSecondary)
             }
             HStack(spacing: 14) {
                 Image(systemName: tier.tier == .elite ? "crown.fill" : "shield.fill")
-                    .font(.system(size: 40))
+                    .font(.app(size: 40))
                     .foregroundStyle(tier.tier.color)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(tier.tier.title).font(.title.bold()).foregroundStyle(Theme.textPrimary)
-                    Text(subtitle).font(.subheadline).foregroundStyle(Theme.textSecondary)
+                    Text(tier.tier.title).font(.app(.title, .bold)).foregroundStyle(Theme.textPrimary)
+                    Text(subtitle).font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -251,7 +251,7 @@ struct BadgesSection: View {
             SectionTitle("Badges", trailing: "\(earnedDates.count) of \(Badges.all.count)")
             VStack(alignment: .leading, spacing: 14) {
                 Text("Badges mark milestones in sleep, activity, recovery, and consistency. Gold ones are earned; tap any badge to see what it takes.")
-                    .font(.caption).foregroundStyle(Theme.textSecondary)
+                    .font(.app(.caption)).foregroundStyle(Theme.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
                 LazyVGrid(columns: columns, spacing: 14) {
                     ForEach(Badges.all) { badge in
@@ -260,13 +260,13 @@ struct BadgesSection: View {
                             VStack(spacing: 6) {
                                 BadgeIcon(badge: badge, isEarned: isEarned, size: 52)
                                 Text(badge.title)
-                                    .font(.caption2.weight(.semibold))
+                                    .font(.app(.caption2, .semibold))
                                     .foregroundStyle(isEarned ? Theme.textPrimary : Theme.textSecondary)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)
                                     .minimumScaleFactor(0.8)
                                 Text(badge.detail)
-                                    .font(.system(size: 10))
+                                    .font(.app(size: 10))
                                     .foregroundStyle(Theme.textSecondary)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(2)
@@ -299,14 +299,14 @@ struct BadgeIcon: View {
 
     var body: some View {
         Image(systemName: badge.symbol)
-            .font(.system(size: size * 0.42))
+            .font(.app(size: size * 0.42))
             .foregroundStyle(isEarned ? Theme.gold : Theme.textSecondary.opacity(0.4))
             .frame(width: size, height: size)
             .background(isEarned ? Theme.gold.opacity(0.14) : Theme.surfaceRaised, in: Circle())
             .overlay(alignment: .bottomTrailing) {
                 if !isEarned {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: size * 0.18, weight: .bold))
+                        .font(.app(size: size * 0.18, weight: .bold))
                         .foregroundStyle(Theme.textSecondary)
                         .padding(size * 0.08)
                         .background(Theme.surface, in: Circle())
@@ -325,21 +325,21 @@ struct BadgeDetailSheet: View {
             BadgeIcon(badge: badge, isEarned: earnedOn != nil, size: 88)
                 .padding(.top, 28)
             VStack(spacing: 6) {
-                Text(badge.title).font(.title2.bold()).foregroundStyle(Theme.textPrimary)
+                Text(badge.title).font(.app(.title2, .bold)).foregroundStyle(Theme.textPrimary)
                 Label(earnedOn.map { "Earned \($0.noon.formatted(.dateTime.month(.wide).day().year()))" } ?? "Not earned yet",
                       systemImage: earnedOn == nil ? "lock.fill" : "checkmark.seal.fill")
-                    .font(.subheadline.weight(.semibold))
+                    .font(.app(.subheadline, .semibold))
                     .foregroundStyle(earnedOn == nil ? Theme.textSecondary : Theme.gold)
             }
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("How to earn it").sectionLabel()
-                    Text(badge.detail + ".").font(.body).foregroundStyle(Theme.textPrimary)
+                    Text(badge.detail + ".").font(.app(.body)).foregroundStyle(Theme.textPrimary)
                 }
                 if !badge.why.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Why it matters").sectionLabel()
-                        Text(badge.why).font(.subheadline).foregroundStyle(Theme.textSecondary)
+                        Text(badge.why).font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
