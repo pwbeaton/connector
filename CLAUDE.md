@@ -2,7 +2,7 @@
 
 Memory for Claude Code sessions on this repo. Keep it under ~200 lines. Record anything learned or decided under **Decisions**. The milestone checklist lives in `docs/PLAN.md`; score formulas in `docs/SCORES.md`.
 
-Placeholders still to be confirmed by the user (never guess them): final app name ("Connector" is a working title), bundle ID, Apple team ID, Google iOS client ID, Supabase project ref.
+App identity (2026-10-27): name **Statline** (App Store listing "Statline: Recovery & Sleep", Apple ID 6827823026), bundle ID `com.pwbeaton.statline`, team `6CTBZ2U8GC`, Google project `statline-512922` (published, unverified), Supabase project `bpaspwqhhctzxyaykzgb`. Website: https://pwbeaton.github.io/statline/ (repo pwbeaton/statline). Version 1.0 (build 3) submitted to App Review on 2026-10-27.
 
 ## Product (V1, rebuilt 2026-10-27)
 An iPhone app where friends compare training-camp style stats from their **Fitbit Air**: Recovery, Sleep, and Effort scores (0–100), Effort targets, streaks, training tiers, weekly challenges, badges, records, group leaderboards, and reactions.

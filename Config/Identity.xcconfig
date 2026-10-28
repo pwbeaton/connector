@@ -7,19 +7,19 @@
 // Note: xcconfig treats "//" as a comment, so never put comments after a value.
 
 // Working title. Change it any time.
-APP_DISPLAY_NAME = Connector
-APP_BUNDLE_ID = com.example.placeholder
+APP_DISPLAY_NAME = Statline
+APP_BUNDLE_ID = com.pwbeaton.statline
 APP_GROUP_ID = group.$(APP_BUNDLE_ID)
 
 // Invite links look like connector://join/CODE.
 APP_URL_SCHEME = connector
 
 // Your Apple Developer team ID (10 characters, from developer.apple.com → Membership).
-DEVELOPMENT_TEAM =
+DEVELOPMENT_TEAM = 6CTBZ2U8GC
 
 // Google iOS OAuth client (docs/SETUP-GOOGLE.md). Paste only the part of the
 // client ID before ".apps.googleusercontent.com", e.g. 1234567890-abc123def.
-GOOGLE_CLIENT_ID_PREFIX = placeholder
+GOOGLE_CLIENT_ID_PREFIX = 51571390620-2i9at7rsh820h7p7i7844lo26ep6cmim
 GOOGLE_IOS_CLIENT_ID = $(GOOGLE_CLIENT_ID_PREFIX).apps.googleusercontent.com
 GOOGLE_URL_SCHEME = com.googleusercontent.apps.$(GOOGLE_CLIENT_ID_PREFIX)
 
