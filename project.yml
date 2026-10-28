@@ -20,7 +20,7 @@ configFiles:
 settings:
   base:
     MARKETING_VERSION: "1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     TARGETED_DEVICE_FAMILY: "1" # iPhone only
     CODE_SIGN_STYLE: Automatic
     # Swift 6 language mode: the compiler checks for data races.
@@ -93,6 +93,9 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
+        # iPhone only. XcodeGen's iOS defaults set "1,2" (iPad too) at the target level, which
+        # overrides the project setting and makes App Store Connect demand every iPad orientation.
+        TARGETED_DEVICE_FAMILY: "1"
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         # UI code runs on the main actor unless marked otherwise (Xcode 26+ default for new apps).
@@ -133,6 +136,7 @@ targets:
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).widget
+        TARGETED_DEVICE_FAMILY: "1"
         SWIFT_APPROACHABLE_CONCURRENCY: YES
 
   Tests:
