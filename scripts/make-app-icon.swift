@@ -30,15 +30,15 @@ context.drawLinearGradient(background, start: CGPoint(x: CGFloat(size), y: 0), e
 // A soft glow behind the line ends.
 let glow = CGGradient(colorsSpace: space, colors: [rgb(0x2EA8FF, 0.16), rgb(0x2EA8FF, 0)] as CFArray, locations: [0, 1])!
 context.drawRadialGradient(glow, startCenter: CGPoint(x: 640, y: 512), startRadius: 0,
-                           endCenter: CGPoint(x: 640, y: 512), endRadius: 520, options: [])
+                           endCenter: CGPoint(x: 640, y: 512), endRadius: 600, options: [])
 
 // The stat lines: Recovery green, Effort blue, Sleep violet, and an amber accent.
 struct Line { let y: CGFloat; let end: CGFloat; let height: CGFloat; let color: UInt32 }
 let lines = [
-    Line(y: 330, end: 742, height: 66, color: 0x16E07F),
-    Line(y: 452, end: 862, height: 66, color: 0x2EA8FF),
-    Line(y: 574, end: 662, height: 66, color: 0x8F7BFF),
-    Line(y: 696, end: 548, height: 66, color: 0xFFC83D),
+    Line(y: 236, end: 800, height: 104, color: 0x16E07F),
+    Line(y: 420, end: 930, height: 104, color: 0x2EA8FF),
+    Line(y: 604, end: 700, height: 104, color: 0x8F7BFF),
+    Line(y: 788, end: 570, height: 104, color: 0xFFC83D),
 ]
 
 for line in lines {
@@ -61,8 +61,8 @@ for line in lines {
     context.addPath(path)
     context.clip()
     let streak = CGGradient(colorsSpace: space,
-                            colors: [rgb(line.color, 0), rgb(line.color, 0.35), rgb(line.color, 1)] as CFArray,
-                            locations: [0, 0.35, 0.8])!
+                            colors: [rgb(line.color, 0.45), rgb(line.color, 0.8), rgb(line.color, 1)] as CFArray,
+                            locations: [0, 0.3, 0.6])!
     context.drawLinearGradient(streak, start: CGPoint(x: 0, y: line.y), end: CGPoint(x: line.end, y: line.y), options: [])
     context.restoreGState()
 }
