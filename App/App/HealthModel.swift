@@ -119,7 +119,18 @@ final class HealthModel {
         let recent = state.records.filter { $0.date < date && $0.date >= date.adding(days: -7) }.compactMap(\.sleep)
         return SleepTip.make(sleep: sleep, score: score, goalMinutes: goals.sleepMinutes,
                              recentWakeMinutes: recent.map(\.wakeMinuteOfDay),
-                             recentAwakeMinutes: recent.map { max(0, $0.minutesInBed - $0.minutesAsleep) })
+                             recentAwakeMinutes: recent.map { max(0, $0.minutesInBed - $0.minutesAsleep) },
+                             plannedBedtime: bedtimePlan(on: date)?.bedtime)
+    }
+
+    /// Sleep owed on the morning of `date` (14 nights, recent ones weighted more).
+    func sleepDebt(on date: CivilDate) -> SleepDebt? {
+        SleepDebt.compute(on: date, records: state.records, goalMinutes: goals.sleepMinutes)
+    }
+
+    /// The bedtime for the night after `date`, including a slice of any sleep debt.
+    func bedtimePlan(on date: CivilDate) -> BedtimePlan? {
+        BedtimePlan.make(on: date, records: state.records, goalMinutes: goals.sleepMinutes, debt: sleepDebt(on: date))
     }
 
     // MARK: Biological age

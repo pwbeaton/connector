@@ -32,12 +32,16 @@ Being exactly at your baseline gives 50 for the HRV and resting HR parts. If res
 **Bands:** **Go** 67–100 · **Steady** 34–66 · **Recover** 0–33.
 
 ## Sleep (0–100)
-| Part | Points | Full points when… |
-|---|---|---|
-| Duration | 50 | Asleep for at least your sleep goal (default 7 h 30 min) |
-| Restoration | 25 | Deep + REM are at least 40% of time asleep. Nights without stage data get 60% of these points. |
-| Efficiency | 15 | Asleep ÷ time in bed is 95% or more (0 points at 75%) |
-| Consistency | 10 | You woke at your usual time (average of the past week). 0 points at 90 minutes off. With fewer than 3 earlier nights, you get 7 points. |
+Tightened on 2026-10-27: the first version averaged about 90 on ordinary nights, which hid real shortfalls.
+
+| Part | Points | Scoring | Why |
+|---|---|---|---|
+| Duration | 50 | 50 × (asleep ÷ goal)², capped at the goal (default 7 h 30 min). 90% of goal → 40.5, 80% → 32 | Deficits compound: two weeks of 6-hour nights impaired people as much as one to two nights without sleep (Van Dongen et al., *Sleep* 2003). Adults need 7+ hours (AASM/SRS consensus, Watson et al. 2015). |
+| Restoration | 25 | Deep + REM share of time asleep: 0 at 20%, full at 42%. Nights without stage data get 50% | Young-adult norms are roughly 15–20% deep and 20–25% REM (Ohayon et al., *Sleep* 2004). |
+| Efficiency | 15 | Asleep ÷ time in bed: 0 at 80%, full at 95% | The National Sleep Foundation counts 85%+ as good sleep quality (Ohayon et al., *Sleep Health* 2017). |
+| Consistency | 10 | Wake time vs your usual (past week): full when on time, 0 at 60 minutes off. With fewer than 3 earlier nights, 7 points | Later and more variable sleep timing is linked to worse health (Chaput et al. 2020 review; NSF regularity consensus 2023). |
+
+A typical good night (7 h 20 m on a 7 h 30 m goal, 36% deep + REM, 90% efficiency, on time) now scores about 83; a run of 6 h 20 m nights at 88% efficiency averages about 66.
 
 ## Effort (0–100)
 `Effort = 100 × (1 − e^(−AZM / 45))`. It climbs quickly at first, then flattens, so 100 is rare.
@@ -93,7 +97,14 @@ There are 20 badges (`Badges.all` in `App/Engine/Achievements.swift`), each date
 - Swipe right on Today (or use the arrows) to see any earlier day back to the first synced day, at most 90 days ago.
 
 ## Sleep tip
-One tip per night (`SleepTip` in `App/Engine/SleepTip.swift`), aimed at the part of the Sleep score that lost the most points: duration (a bedtime that fits your goal before your usual wake time), consistency (wake closer to your usual time, named), efficiency, or deep + REM. Consistency is skipped until there are 3 nights of history and deep + REM when the night has no stages. If nothing lost 2+ points, it says so.
+One tip per night (`SleepTip` in `App/Engine/SleepTip.swift`), shown on the Sleep detail screen, aimed at the part of the Sleep score that lost the most points: duration (tonight's planned bedtime), consistency (wake closer to your usual time, named), efficiency, or deep + REM. Consistency is skipped until there are 3 nights of history and deep + REM when the night has no stages. If nothing lost 2+ points, it says so.
+
+## Sleep debt and tonight's bedtime
+`SleepDebt` and `BedtimePlan` in `App/Engine/SleepDebt.swift`.
+- **Debt** = the weighted sum of (goal − minutes asleep) over the last **14 nights** (the window RISE uses), with last night counting fully and the oldest night half. Nights over the goal pay it down; the total never goes below zero. Needs 5 nights. Under 2 h is low, 2–5 h moderate, over 5 h high (RISE suggests staying under 5 h).
+- **Tonight's bedtime** = usual wake time (last 7 nights) − sleep goal − a slice of debt − the time you usually lie awake. The slice is debt ÷ 4, capped at 60 minutes, because one hour of debt takes about four nights of extra sleep to repay (Kitamura et al., *Scientific Reports* 2016). Wake time stays fixed.
+- The body clock advances about an hour a day at most, so the bedtime never moves more than **60 minutes earlier than your usual bedtime** in one night; the detail screen shows the full catch-up bedtime when it's held back.
+- Today shows the bedtime, how much earlier or later it is than usual, and the debt. The Sleep detail screen shows a 14-night chart of each night against the goal.
 
 ## Biological age
 An effective-age estimate (`BiologicalAge` in `App/Engine/BiologicalAge.swift`), the method behind WHOOP Age, heart age, and lung age:

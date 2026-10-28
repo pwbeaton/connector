@@ -26,19 +26,42 @@ nonisolated enum ScoreTuning {
     static let recoveryRestMaximum = 33
 
     // MARK: Sleep (weights add up to 100 points)
+    // Tightened 2026-10-27 after review (docs/SCORES.md): the old curve averaged ~90 on ordinary nights.
     static let sleepDurationPoints = 50.0
     static let sleepRestorationPoints = 25.0
     static let sleepEfficiencyPoints = 15.0
     static let sleepConsistencyPoints = 10.0
-    /// Deep + REM share of time asleep that earns full restoration points.
-    static let restorativeShareTarget = 0.40
+    /// Duration points = share of goal ^ this. Above 1, each missing hour costs more than the last
+    /// (deficits compound: Van Dongen et al., Sleep 2003). 2 → 90% of goal earns 81%.
+    static let sleepDurationExponent = 2.0
+    /// Deep + REM share of time asleep: no points at the floor, full points at the target
+    /// (young-adult norms ~15–20% deep + 20–25% REM: Ohayon et al., Sleep 2004).
+    static let restorativeShareFloor = 0.20
+    static let restorativeShareTarget = 0.42
     /// Restoration credit for "classic" sleep with no stage data (fraction of the points).
-    static let restorationWithoutStages = 0.6
+    static let restorationWithoutStages = 0.5
     /// Efficiency (asleep ÷ in bed) mapped linearly from 0 points to full points.
-    static let efficiencyFloor = 0.75
+    /// The National Sleep Foundation counts 85%+ as good (Ohayon et al., Sleep Health 2017).
+    static let efficiencyFloor = 0.80
     static let efficiencyCeiling = 0.95
-    /// Wake time this many minutes from your usual time earns no consistency points.
-    static let wakeConsistencyToleranceMinutes = 90.0
+    /// Wake time this many minutes from your usual time earns no consistency points
+    /// (regular timing predicts better health: Chaput et al. 2020; NSF regularity consensus 2023).
+    static let wakeConsistencyToleranceMinutes = 60.0
+
+    // MARK: Sleep debt
+    /// Nights looked back (the window RISE uses; ~2 weeks of loss drives how you feel).
+    static let sleepDebtNights = 14
+    /// Last night counts fully; the oldest night in the window counts this much.
+    static let sleepDebtOldestWeight = 0.5
+    /// Nights with data needed in the window before debt is shown.
+    static let sleepDebtMinimumNights = 5
+    /// Repaying 1 h of debt takes ~4 nights of extra sleep (Kitamura et al., Sci Rep 2016),
+    /// so tonight's extra time is debt ÷ 4, capped so bedtime moves by at most an hour.
+    static let sleepDebtRepayNights = 4.0
+    static let sleepDebtMaxExtraMinutes = 60
+    /// The body clock advances about an hour a day at most, so tonight's bedtime moves
+    /// no more than this much earlier than your usual one.
+    static let maxBedtimeShiftMinutes = 60
     /// Nights of history needed to judge consistency; before that, this share of the points.
     static let wakeConsistencyMinimumNights = 3
     static let consistencyWithoutHistory = 0.7

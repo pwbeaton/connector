@@ -106,8 +106,19 @@ struct DayPage: View {
                     .accessibilityHint("Shows your Effort history")
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                if let tip = health.sleepTip(on: date) {
-                    SleepTipCard(tip: tip, isToday: isToday)
+                Button { showDetail(.biologicalAge(date)) } label: {
+                    BiologicalAgeCard(result: health.biologicalAge(on: date), trend: health.biologicalAgeTrend(on: date),
+                                      history: biologicalAgeHistory, hasAge: health.chronologicalAge != nil,
+                                      daysOfData: daysOfData)
+                }
+                .buttonStyle(.pressableCard)
+                .accessibilityHint("Shows what moves your biological age")
+                if isToday, let plan = health.bedtimePlan(on: date) {
+                    Button { showDetail(.score(.sleep, date)) } label: {
+                        TonightCard(plan: plan, debt: health.sleepDebt(on: date))
+                    }
+                    .buttonStyle(.pressableCard)
+                    .accessibilityHint("Shows your sleep debt and sleep history")
                 }
                 EffortTargetCard(scores: scores, record: record, isToday: isToday)
                 if isToday {
@@ -116,13 +127,6 @@ struct DayPage: View {
                         session.selectedTab = .team
                     }
                 }
-                Button { showDetail(.biologicalAge(date)) } label: {
-                    BiologicalAgeCard(result: health.biologicalAge(on: date), trend: health.biologicalAgeTrend(on: date),
-                                      history: biologicalAgeHistory, hasAge: health.chronologicalAge != nil,
-                                      daysOfData: daysOfData)
-                }
-                .buttonStyle(.pressableCard)
-                .accessibilityHint("Shows what moves your biological age")
                 if isToday && health.hasData {
                     ShareWeekButton(recap: WeeklyRecap.make(snapshot: health.snapshot, records: health.records,
                                                             weekStart: health.today.weekStart))

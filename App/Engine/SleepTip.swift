@@ -26,8 +26,9 @@ nonisolated struct SleepTip: Equatable, Sendable {
     /// - Parameters:
     ///   - recentWakeMinutes: local wake times of the 7 nights before this one.
     ///   - recentAwakeMinutes: minutes awake in bed on recent nights (to plan a bedtime).
+    /// - Parameter plannedBedtime: tonight's bedtime from the sleep-debt plan, so the tip and the plan agree.
     static func make(sleep: SleepSummary, score: SleepScore, goalMinutes: Int, recentWakeMinutes: [Int],
-                     recentAwakeMinutes: [Int] = []) -> SleepTip {
+                     recentAwakeMinutes: [Int] = [], plannedBedtime: Int? = nil) -> SleepTip {
         let usualWake = recentWakeMinutes.count >= ScoreTuning.wakeConsistencyMinimumNights
             ? SleepScore.circularMeanMinute(recentWakeMinutes) : nil
 
@@ -53,7 +54,7 @@ nonisolated struct SleepTip: Equatable, Sendable {
                 ? max(0, sleep.minutesInBed - sleep.minutesAsleep)
                 : recentAwakeMinutes.reduce(0, +) / recentAwakeMinutes.count
             let wake = usualWake ?? sleep.wakeMinuteOfDay
-            let bedtime = ((wake - goalMinutes - awake) % 1440 + 1440) % 1440
+            let bedtime = plannedBedtime ?? ((wake - goalMinutes - awake) % 1440 + 1440) % 1440
             return SleepTip(
                 focus: .duration,
                 title: "In bed by \(Format.clock(minuteOfDay: bedtime))",

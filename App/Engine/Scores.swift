@@ -48,12 +48,13 @@ nonisolated struct SleepScore: Codable, Equatable, Sendable {
     /// - Parameter recentWakeMinutes: local wake times (minutes after midnight) of earlier nights this week.
     static func score(_ sleep: SleepSummary, goalMinutes: Int, recentWakeMinutes: [Int]) -> SleepScore {
         let durationShare = min(1, Double(sleep.minutesAsleep) / Double(max(goalMinutes, 1)))
-        let duration = durationShare * ScoreTuning.sleepDurationPoints
+        let duration = pow(durationShare, ScoreTuning.sleepDurationExponent) * ScoreTuning.sleepDurationPoints
 
         let restorationShare: Double
         if let deep = sleep.deepMinutes, let rem = sleep.remMinutes, sleep.minutesAsleep > 0 {
             let share = Double(deep + rem) / Double(sleep.minutesAsleep)
-            restorationShare = min(1, share / ScoreTuning.restorativeShareTarget)
+            restorationShare = clamp((share - ScoreTuning.restorativeShareFloor)
+                / (ScoreTuning.restorativeShareTarget - ScoreTuning.restorativeShareFloor))
         } else {
             restorationShare = ScoreTuning.restorationWithoutStages
         }

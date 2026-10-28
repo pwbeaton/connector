@@ -114,3 +114,49 @@ struct ScoreTrendTests {
         #expect(week.change == 20)
     }
 }
+
+struct SleepDebtTests {
+    private func nights(_ asleep: [Int], wake: Int = 400) -> [DayRecord] {
+        asleep.enumerated().map { day(monday.plus($0), asleep: $1, wakeMinute: wake) }
+    }
+
+    @Test func shortNightsAddUpAndRecentOnesCountMore() throws {
+        // 14 nights, each 60 minutes short of a 450-minute goal.
+        let debt = try #require(SleepDebt.compute(on: monday.plus(13), records: nights(Array(repeating: 390, count: 14)),
+                                                  goalMinutes: 450))
+        // Weights run from 1.0 (last night) to 0.5 (oldest): 14 × 60 × 0.75 = 630.
+        #expect(debt.minutes == 630)
+        #expect(debt.level == .high)
+    }
+
+    @Test func extraSleepPaysItDownButNeverBelowZero() throws {
+        let debt = try #require(SleepDebt.compute(on: monday.plus(6), records: nights(Array(repeating: 540, count: 7)),
+                                                  goalMinutes: 450))
+        #expect(debt.minutes == 0)
+        #expect(debt.level == .low)
+    }
+
+    @Test func needsFiveNights() {
+        #expect(SleepDebt.compute(on: monday.plus(3), records: nights([400, 400, 400, 400]), goalMinutes: 450) == nil)
+    }
+
+    @Test func bedtimeAddsDebtRepaymentAndKeepsTheWakeTime() throws {
+        // Seven nights of 7h 15m waking at 6:40 AM; goal 7h 30m.
+        let records = nights(Array(repeating: 435, count: 7))
+        let debt = SleepDebt.compute(on: monday.plus(6), records: records, goalMinutes: 450)
+        let plan = try #require(BedtimePlan.make(on: monday.plus(6), records: records, goalMinutes: 450, debt: debt))
+        #expect(plan.wakeTime == 400)
+        #expect(plan.extraMinutes > 0)
+        #expect(try #require(plan.shiftFromUsual) < 0)
+        #expect(!plan.isEasedIn)
+    }
+
+    @Test func bedtimeMovesAtMostAnHourEarlier() throws {
+        let records = nights(Array(repeating: 330, count: 14))
+        let debt = SleepDebt.compute(on: monday.plus(13), records: records, goalMinutes: 480)
+        let plan = try #require(BedtimePlan.make(on: monday.plus(13), records: records, goalMinutes: 480, debt: debt))
+        #expect(plan.isEasedIn)
+        // An hour earlier than usual, rounded to a 5-minute clock time.
+        #expect(abs((plan.shiftFromUsual ?? 0) + 60) <= 5)
+    }
+}

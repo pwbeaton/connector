@@ -12,10 +12,11 @@ struct SleepScoreTests {
         #expect(score.total == 100)
     }
 
-    @Test func durationIsHalfThePointsAtHalfTheGoal() {
-        let night = DemoData.night(wakingOn: monday, wakeMinute: 400, asleepMinutes: 225)
-        let score = SleepScore.score(night, goalMinutes: 450, recentWakeMinutes: onTime)
-        #expect(score.duration == 25)
+    @Test func durationLosesPointsFasterAsTheShortfallGrows() {
+        let half = DemoData.night(wakingOn: monday, wakeMinute: 400, asleepMinutes: 225)
+        let ninety = DemoData.night(wakingOn: monday, wakeMinute: 400, asleepMinutes: 405)
+        #expect(SleepScore.score(half, goalMinutes: 450, recentWakeMinutes: onTime).duration == 12.5)
+        #expect(abs(SleepScore.score(ninety, goalMinutes: 450, recentWakeMinutes: onTime).duration - 40.5) < 0.0001)
     }
 
     @Test func nightsWithoutStagesGetPartialRestoration() {
@@ -23,11 +24,11 @@ struct SleepScoreTests {
         night.deepMinutes = nil
         night.remMinutes = nil
         let score = SleepScore.score(night, goalMinutes: 450, recentWakeMinutes: onTime)
-        #expect(score.restoration == 25 * 0.6)
+        #expect(score.restoration == 25 * 0.5)
     }
 
-    @Test func efficiencyRunsFrom75To95Percent() {
-        let restless = DemoData.night(wakingOn: monday, wakeMinute: 400, asleepMinutes: 400, efficiency: 0.70)
+    @Test func efficiencyRunsFrom80To95Percent() {
+        let restless = DemoData.night(wakingOn: monday, wakeMinute: 400, asleepMinutes: 400, efficiency: 0.79)
         let solid = DemoData.night(wakingOn: monday, wakeMinute: 400, asleepMinutes: 400, efficiency: 0.97)
         #expect(SleepScore.score(restless, goalMinutes: 450, recentWakeMinutes: onTime).efficiency == 0)
         #expect(SleepScore.score(solid, goalMinutes: 450, recentWakeMinutes: onTime).efficiency == 15)

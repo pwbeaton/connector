@@ -16,7 +16,7 @@ extension ScoreKind {
         case .recovery:
             "How ready your body is today. Half comes from last night's HRV against your 30-day normal, a fifth from resting heart rate against your normal, and the rest from your Sleep score. 67+ is Go, 34–66 Steady, 33 or less Recover."
         case .sleep:
-            "Half the points are hours asleep against your goal, a quarter are deep + REM sleep, 15 are efficiency (time asleep ÷ time in bed), and 10 are waking near your usual time."
+            "Half the points are hours asleep against your goal, and each missing hour costs more than the last (90% of your goal earns 81% of those points). A quarter are deep + REM sleep: full marks at 42% of the night, none at 20%. 15 are efficiency, from 80% to 95% of time in bed asleep (85%+ is what sleep experts call good). 10 are waking within an hour of your usual time."
         case .effort:
             "Built from Active Zone Minutes: it climbs fast at first and flattens near the top, so 100 is rare. About 22 minutes scores 39, 45 scores 63, and 90 scores 86. Your daily target follows your Recovery."
         }
@@ -218,6 +218,9 @@ struct ScoreDetailView: View {
             }
             if let tip = health.sleepTip(on: date) {
                 SleepTipCard(tip: tip, isToday: date == health.today)
+            }
+            if let debt = health.sleepDebt(on: date) {
+                SleepDebtCard(debt: debt, plan: date == health.today ? health.bedtimePlan(on: date) : nil)
             }
             rawTrend(title: "Hours asleep", unit: "h", color: Theme.sleep, goal: Double(health.goals.sleepMinutes) / 60) {
                 $0.sleep.map { Double($0.minutesAsleep) / 60 }
