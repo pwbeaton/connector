@@ -62,6 +62,7 @@ struct OnboardingPage<Content: View, Buttons: View>: View {
 struct WelcomeView: View {
     let model: OnboardingModel
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+    @Environment(\.exploreSampleData) private var exploreSampleData
 
     var body: some View {
         VStack(spacing: 0) {
@@ -97,6 +98,12 @@ struct WelcomeView: View {
                 }
                 .buttonStyle(.primary)
                 .disabled(model.isBusy)
+                if let exploreSampleData {
+                    Button("Explore with sample data") { exploreSampleData() }
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(Theme.effort)
+                        .disabled(model.isBusy)
+                }
                 Label("Your raw health data stays on this iPhone. Friends see only the daily scores you choose to share.",
                       systemImage: "lock.fill")
                     .font(.caption)

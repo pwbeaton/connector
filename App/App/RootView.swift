@@ -14,7 +14,28 @@ struct RootView: View {
         }
         .tint(Theme.effort)
         .environment(\.animatesScores, !model.options.isScreenshotMode)
+        .environment(\.exploreSampleData, exploreSampleData)
+        .environment(\.exitSampleData, exitSampleData)
     }
+
+    private var exploreSampleData: (@MainActor () -> Void)? {
+        guard model.canExploreSampleData else { return nil }
+        let model = model
+        return { model.enterDemo() }
+    }
+
+    private var exitSampleData: (@MainActor () -> Void)? {
+        guard model.canExitSampleData else { return nil }
+        let model = model
+        return { model.exitDemo() }
+    }
+}
+
+extension EnvironmentValues {
+    /// Switches to built-in sample data (shown on the welcome screen of a live build).
+    @Entry var exploreSampleData: (@MainActor () -> Void)?
+    /// Leaves sample data for the real sign-in.
+    @Entry var exitSampleData: (@MainActor () -> Void)?
 }
 
 /// Onboarding or the four tabs, for one session.

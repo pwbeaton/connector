@@ -17,16 +17,21 @@ final class AppModel {
     private(set) var mode: Mode
     /// The signed-in (or demo) session; nil while setup is needed.
     private(set) var session: AppSession?
+    /// The real configuration, kept so someone exploring sample data can go back to signing in.
+    @ObservationIgnored private var liveConfig: AppConfig?
+    @ObservationIgnored private let makeLiveServices: (AppConfig) -> AppServices
 
     init(options: LaunchOptions, loadConfig: () throws -> AppConfig = AppConfig.fromMainBundle,
-         makeLiveServices: (AppConfig) -> AppServices = AppServices.live) {
+         makeLiveServices: @escaping (AppConfig) -> AppServices = AppServices.live) {
         self.options = options
+        self.makeLiveServices = makeLiveServices
         if options.isDemo {
             mode = .demo
             session = AppSession(services: Self.demoServices(for: options), options: options)
         } else {
             do {
                 let config = try loadConfig()
+                liveConfig = config
                 mode = .live(config)
                 session = AppSession(services: makeLiveServices(config), options: options)
             } catch let error as AppConfig.LoadError {
@@ -37,11 +42,26 @@ final class AppModel {
         }
     }
 
-    /// Lets someone explore the app with sample data before setting anything up.
+    /// Lets someone explore the app with sample data before setting anything up
+    /// (also how App Review sees the app without a Fitbit).
     func enterDemo() {
         mode = .demo
         session = AppSession(services: Self.demoServices(for: options), options: options)
     }
+
+    /// From sample data back to the real sign-in (only when the app has a live configuration).
+    func exitDemo() {
+        guard let liveConfig else { return }
+        mode = .live(liveConfig)
+        session = AppSession(services: makeLiveServices(liveConfig), options: options)
+    }
+
+    var canExploreSampleData: Bool {
+        if case .live = mode { return true }
+        return false
+    }
+
+    var canExitSampleData: Bool { mode == .demo && liveConfig != nil && !options.isDemo }
 
     /// Demo onboarding screens start signed out and without a group, like a new user.
     private static func demoServices(for options: LaunchOptions) -> AppServices {

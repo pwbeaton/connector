@@ -68,6 +68,7 @@ struct TodayView: View {
 struct DayPage: View {
     @Environment(AppSession.self) private var session
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
+    @Environment(\.exitSampleData) private var exitSampleData
 
     let date: CivilDate
     let canGoBack: Bool
@@ -222,6 +223,10 @@ struct DayPage: View {
     }
 
     @ViewBuilder private var banners: some View {
+        if session.services.isDemo, let exitSampleData {
+            Banner(symbol: "sparkles", message: "You're exploring sample data.", color: Theme.effort,
+                   actionTitle: "Sign in") { exitSampleData() }
+        }
         if let tier = health.promotion {
             Banner(symbol: "shield.fill", message: "Promoted to \(tier.title)! Four weeks of consistency earned it.",
                    color: tier.color, actionTitle: "Nice") {
