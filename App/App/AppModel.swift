@@ -71,7 +71,9 @@ final class AppModel {
 }
 
 /// The tabs after onboarding.
-enum MainTab: String, CaseIterable, Hashable {
+/// Nonisolated so its Equatable/Hashable conformances can run anywhere: SwiftUI compares
+/// `.sensoryFeedback` triggers off the main thread, and a main-actor conformance traps there.
+nonisolated enum MainTab: String, CaseIterable, Hashable, Sendable {
     case today, team, trends, profile
 }
 

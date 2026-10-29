@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// What a tap on Today opens.
-enum TodayDetail: Identifiable, Hashable {
+nonisolated enum TodayDetail: Identifiable, Hashable, Sendable {
     case score(ScoreKind, CivilDate)
     case biologicalAge(CivilDate)
 

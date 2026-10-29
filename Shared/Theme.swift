@@ -254,9 +254,7 @@ extension View {
 extension Color {
     /// A color that switches between two hex values in light and dark mode.
     init(light: UInt32, dark: UInt32) {
-        self.init(uiColor: UIColor { traits in
-            UIColor(hex: traits.userInterfaceStyle == .dark ? dark : light)
-        })
+        self.init(uiColor: UIColor.dynamic(light: light, dark: dark))
     }
 
     init(hex: UInt32) {
@@ -265,7 +263,15 @@ extension Color {
 }
 
 extension UIColor {
-    convenience init(hex: UInt32) {
+    /// UIKit may resolve dynamic colors on any thread, so the provider must not be main-actor
+    /// isolated (it would trap under Swift 6's runtime checks).
+    nonisolated static func dynamic(light: UInt32, dark: UInt32) -> UIColor {
+        UIColor { @Sendable traits in
+            UIColor(hex: traits.userInterfaceStyle == .dark ? dark : light)
+        }
+    }
+
+    nonisolated convenience init(hex: UInt32) {
         self.init(
             red: CGFloat((hex >> 16) & 0xFF) / 255,
             green: CGFloat((hex >> 8) & 0xFF) / 255,
