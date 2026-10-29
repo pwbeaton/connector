@@ -91,9 +91,9 @@ enum Theme {
 /// Open Font License and bundled in Shared/Fonts. The redesign leans on Archivo's width axis:
 /// condensed numerals (66–75%), slightly narrowed headings (85%), normal-width text.
 enum Typeface {
-    static let archivo = "Archivo-SemiBold"
-    static let monoRegular = "IBMPlexMono-Regular"
-    static let monoMedium = "IBMPlexMono-Medium"
+    nonisolated static let archivo = "Archivo-SemiBold"
+    nonisolated static let monoRegular = "IBMPlexMono-Regular"
+    nonisolated static let monoMedium = "IBMPlexMono-Medium"
 
     /// Line heights at `line-height: normal`, as a multiple of the font size (hhea ascent + descent).
     /// SwiftUI sizes a line to exactly this; `lineBox` trims or pads it to the spec's CSS line height.
@@ -104,7 +104,11 @@ enum Typeface {
     private static let widthAxis = 0x7764_7468  // 'wdth'
 
     /// The variable font straight from the bundled file, so it never depends on name lookup.
-    private static let archivoBase: CTFontDescriptor = {
+    /// Font descriptors are immutable and thread-safe, so sharing one across actors is fine
+    /// (the widget target isn't main-actor by default).
+    nonisolated(unsafe) private static let archivoBase: CTFontDescriptor = loadArchivo()
+
+    private nonisolated static func loadArchivo() -> CTFontDescriptor {
         for bundle in [Bundle.main] + Bundle.allBundles {
             if let url = bundle.url(forResource: "Archivo-Variable", withExtension: "ttf"),
                let descriptors = CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor],
@@ -113,7 +117,7 @@ enum Typeface {
             }
         }
         return CTFontDescriptorCreateWithNameAndSize(archivo as CFString, 0)
-    }()
+    }
 
     /// Archivo at a weight (100–900) and width (62–125%). Digits are tabular like the spec
     /// (`font-variant-numeric: tabular-nums`), baked into the font rather than applied with
