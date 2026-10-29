@@ -6,13 +6,15 @@
 // CI builds without code signing, so placeholders are enough for it.
 // Note: xcconfig treats "//" as a comment, so never put comments after a value.
 
-// Working title. Change it any time.
+// The name under the icon.
 APP_DISPLAY_NAME = Pluto
+// Permanent: App Store Connect ties the app record to this ID (it predates the Pluto
+// rename and is never shown to users), so it can't change.
 APP_BUNDLE_ID = com.pwbeaton.statline
 APP_GROUP_ID = group.$(APP_BUNDLE_ID)
 
-// Invite links look like connector://join/CODE.
-APP_URL_SCHEME = connector
+// Invite links look like plutoapp://join/CODE.
+APP_URL_SCHEME = plutoapp
 
 // Your Apple Developer team ID (10 characters, from developer.apple.com → Membership).
 DEVELOPMENT_TEAM = 6CTBZ2U8GC

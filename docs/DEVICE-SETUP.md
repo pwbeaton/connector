@@ -12,8 +12,8 @@ To use your real Fitbit Air and your friends, do the steps below once.
 
 ## 1. Pick the app's identity
 Open `Config/Identity.xcconfig` and set:
-1. `APP_DISPLAY_NAME`: the name under the icon (Connector is a working title).
-2. `APP_BUNDLE_ID`: a reverse-domain ID you own, e.g. `com.yourname.connector`.
+1. `APP_DISPLAY_NAME`: the name under the icon (Pluto).
+2. `APP_BUNDLE_ID`: a reverse-domain ID you own, e.g. `com.yourname.pluto`.
 3. `DEVELOPMENT_TEAM`: your 10-character team ID from <https://developer.apple.com/account> → **Membership details**.
 
 ## 2. Google
@@ -45,7 +45,7 @@ Follow [SETUP-GOOGLE.md](SETUP-GOOGLE.md). You'll end with `GOOGLE_CLIENT_ID_PRE
 
 ## 5. First launch
 1. **Continue with Google** → pick your account → allow every Google Health permission.
-   - "Google hasn't verified this app": tap **Advanced → Go to Connector**. Expected for a private app.
+   - "Google hasn't verified this app": tap **Advanced → Go to Pluto**. Expected for a private app.
 2. **Your tracker** should say "Fitbit Air found · synced … ago". The app then reads 90 days of history.
 3. Keep or change your goals, then join or create a group and share your invite code.
 

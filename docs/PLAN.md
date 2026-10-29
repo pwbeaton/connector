@@ -3,7 +3,7 @@
 V1 is iOS only and Fitbit Air only, with friends from day one and a "training camp" style. The full approved plan, with its reasoning, is summarized in CLAUDE.md. This file is the checklist.
 
 ## Open questions for the user (not blocking the build)
-- Final app name ("Connector" is a working title), bundle ID, Apple team ID.
+- Final app name (Pluto), bundle ID, Apple team ID.
 - Google Cloud project and iOS OAuth client ID (steps in docs/SETUP-GOOGLE.md).
 - Supabase project (steps in docs/DEVICE-SETUP.md). If the Phase 1 schema was already pushed, run `supabase db reset --linked` once.
 

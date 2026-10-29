@@ -8,7 +8,7 @@ struct AppConfigTests {
         "SupabaseAnonKey": "sb_publishable_123",
         "GoogleClientID": "1234-abc.apps.googleusercontent.com",
         "GoogleRedirectScheme": "com.googleusercontent.apps.1234-abc",
-        "AppURLScheme": "connector",
+        "AppURLScheme": "plutoapp",
     ]
 
     private func with(_ changes: [String: Any]) -> [String: Any] {
@@ -21,7 +21,7 @@ struct AppConfigTests {
         #expect(config.supabaseKey == "sb_publishable_123")
         #expect(config.googleClientID == "1234-abc.apps.googleusercontent.com")
         #expect(config.googleRedirectScheme == "com.googleusercontent.apps.1234-abc")
-        #expect(config.appURLScheme == "connector")
+        #expect(config.appURLScheme == "plutoapp")
     }
 
     @Test func acceptsLocalStack() throws {

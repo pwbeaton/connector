@@ -2,20 +2,20 @@
 
 The app reads your Fitbit Air's data from the **Google Health API** and signs you in with Google. Both use one Google Cloud project with one **iOS OAuth client**. The iOS client has no secret, so nothing secret goes into the app.
 
-Before you start, decide the app's **bundle ID** (for example `com.yourname.connector`). Google needs it, and it must match `APP_BUNDLE_ID` in `Config/Identity.xcconfig`.
+Before you start, decide the app's **bundle ID** (for example `com.yourname.pluto`). Google needs it, and it must match `APP_BUNDLE_ID` in `Config/Identity.xcconfig`.
 
 Google moves buttons around now and then. If a label below doesn't match, look for the closest one; the names of the pages (Branding, Audience, Data Access, Clients) are the stable part.
 
 ## 1. Create the project and turn on the API
 1. Open <https://console.cloud.google.com> and sign in with the Google account you'll use for development.
 2. Click the project picker at the top left, then **New project**.
-3. Name it (for example "Connector"), click **Create**, and wait for it to be selected.
+3. Name it (for example "Pluto"), click **Create**, and wait for it to be selected.
 4. Open the menu (☰) → **APIs & Services** → **Library**.
 5. Search for **Google Health API**, open it, and click **Enable**.
 
 ## 2. Consent screen (Google Auth Platform)
 1. Menu (☰) → **Google Auth Platform** (on older consoles: **APIs & Services → OAuth consent screen**). Click **Get started** if asked.
-2. **App information:** app name "Connector" (or your final name) and your email as the support email. Click **Next**.
+2. **App information:** app name "Pluto" and your email as the support email. Click **Next**.
 3. **Audience:** choose **External**. Click **Next**.
 4. **Contact information:** your email. Click **Next**, tick the agreement, and click **Create**.
 5. Open **Data Access** → **Add or remove scopes**. In "Manually add scopes", paste these lines, click **Add to table**, then **Update** and **Save**:
@@ -32,13 +32,13 @@ Google moves buttons around now and then. If a label below doesn't match, look f
 6. Open **Audience** → **Test users** → **Add users**, and add your Google email plus every friend who will use the app. Google's Health API docs ask for this while the app is unverified (up to 100 people).
 7. Still on **Audience**, click **Publish app** and confirm. The status becomes "In production" (unverified).
    - Why: while an app is in "Testing", Google expires sign-ins after **7 days**. Published, they last.
-   - Your friends will see a "Google hasn't verified this app" screen once. They tap **Advanced → Go to Connector (unsafe)**. That's expected for a private app.
+   - Your friends will see a "Google hasn't verified this app" screen once. They tap **Advanced → Go to Pluto (unsafe)**. That's expected for a private app.
    - If Google won't let you publish, stay in Testing. The app still works; it shows **Reconnect Fitbit** about once a week.
 
 ## 3. Create the iOS client
 1. **Google Auth Platform** → **Clients** → **Create client**.
 2. **Application type:** **iOS**.
-3. **Name:** "Connector iOS".
+3. **Name:** "Pluto iOS".
 4. **Bundle ID:** your bundle ID (exactly as in `Config/Identity.xcconfig`).
 5. **Team ID:** your Apple team ID (optional, but fill it in if you have it).
 6. Click **Create** and copy the **Client ID**. It looks like `1234567890-abc123def456.apps.googleusercontent.com`.

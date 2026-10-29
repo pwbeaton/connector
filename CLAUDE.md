@@ -2,7 +2,7 @@
 
 Memory for Claude Code sessions on this repo. Keep it under ~200 lines. Record anything learned or decided under **Decisions**. The milestone checklist lives in `docs/PLAN.md`; score formulas in `docs/SCORES.md`.
 
-App identity (2026-10-27): name **Statline** (App Store listing "Statline: Recovery & Sleep", Apple ID 6827823026), bundle ID `com.pwbeaton.statline`, team `6CTBZ2U8GC`, Google project `statline-512922` (published, unverified), Supabase project `bpaspwqhhctzxyaykzgb`. Website: https://pwbeaton.github.io/statline/ (repo pwbeaton/statline). Version 1.0 (build 3) submitted to App Review on 2026-10-27.
+App identity (renamed to Pluto 2026-10-28): name **Pluto** (App Store listing "Pluto: Recovery & Sleep", Apple ID 6827823026), team `6CTBZ2U8GC`, Google Cloud project "Pluto" (ID `statline-512922`, published, unverified; OAuth client "Pluto iOS"), Supabase project `bpaspwqhhctzxyaykzgb`. Website: https://pwbeaton.github.io/pluto/ (repo pwbeaton/pluto); code repo pwbeaton/pluto-app. Invite links: `plutoapp://join/CODE`. Permanent leftovers from the old name, never user-visible and impossible to change: bundle ID `com.pwbeaton.statline` (and the App Group derived from it), App Store SKU `statline-ios`, Google project ID `statline-512922`.
 
 ## Product (V1, rebuilt 2026-10-27)
 An iPhone app where friends compare training-camp style stats from their **Fitbit Air**: Recovery, Sleep, and Effort scores (0–100), Effort targets, streaks, training tiers, weekly challenges, badges, records, group leaderboards, and reactions.
@@ -78,7 +78,7 @@ supabase start | supabase db start          # local stack / Postgres only (needs
 supabase db reset                           # re-apply migrations + seed.sql
 supabase test db                            # pgTAP tests
 ```
-CI (`.github/workflows/ci.yml`) runs three jobs: `ios` (macos-26, newest non-beta Xcode), `database` (Supabase CLI 2.118.0), and `screenshots` (push only). Read results with `gh api repos/pwbeaton/connector/actions/...` or the GitHub MCP tools. Review screenshots with `git fetch origin ci-screenshots`.
+CI (`.github/workflows/ci.yml`) runs three jobs: `ios` (macos-26, newest non-beta Xcode), `database` (Supabase CLI 2.118.0), and `screenshots` (push only). Read results with `gh api repos/pwbeaton/pluto-app/actions/...` or the GitHub MCP tools. Review screenshots with `git fetch origin ci-screenshots`.
 
 Demo mode: launch with `-demo YES` (add `-screen <name> -screenshots YES` to open a screen with animations off).
 

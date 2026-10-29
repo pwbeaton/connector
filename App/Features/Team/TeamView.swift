@@ -83,7 +83,7 @@ struct TeamView: View {
 /// The text shared when inviting someone.
 enum InviteText {
     static func message(for group: GroupInfo) -> String {
-        let scheme = (Bundle.main.object(forInfoDictionaryKey: "AppURLScheme") as? String) ?? "connector"
+        let scheme = (Bundle.main.object(forInfoDictionaryKey: "AppURLScheme") as? String) ?? "plutoapp"
         return "Join my group \"\(group.name)\" on Pluto and let's train together. Code: \(group.inviteCode)\n\(scheme)://join/\(group.inviteCode)"
     }
 }

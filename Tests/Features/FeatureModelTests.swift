@@ -167,10 +167,10 @@ struct WeeklyRecapTests {
 
 struct SmallHelperTests {
     @Test func inviteLinks() {
-        #expect(DeepLink.inviteCode(from: URL(string: "connector://join/camp2345")!) == "CAMP2345")
-        #expect(DeepLink.inviteCode(from: URL(string: "connector://join/CAMP-2345")!) == "CAMP2345")
-        #expect(DeepLink.inviteCode(from: URL(string: "connector://join/short")!) == nil)
-        #expect(DeepLink.inviteCode(from: URL(string: "connector://settings")!) == nil)
+        #expect(DeepLink.inviteCode(from: URL(string: "plutoapp://join/camp2345")!) == "CAMP2345")
+        #expect(DeepLink.inviteCode(from: URL(string: "plutoapp://join/CAMP-2345")!) == "CAMP2345")
+        #expect(DeepLink.inviteCode(from: URL(string: "plutoapp://join/short")!) == nil)
+        #expect(DeepLink.inviteCode(from: URL(string: "plutoapp://settings")!) == nil)
     }
 
     @Test func durations() {
