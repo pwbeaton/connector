@@ -56,6 +56,7 @@ struct SleepDebtCard: View {
             Text(debt.minutes == 0 ? "None" : Format.duration(minutes: debt.minutes))
                 .font(.scoreNumber(40))
                 .foregroundStyle(debt.level.color)
+                .lineBox(0.85, size: 40)
             Text("What you owe against your \(Format.duration(minutes: debt.goalMinutes)) sleep goal over the last \(ScoreTuning.sleepDebtNights) nights. Recent nights count more, and nights over your goal pay it down. Under 5 hours is the range to aim for.")
                 .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -105,7 +106,7 @@ struct SleepDebtCard: View {
                 Text("Tonight").font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                 Spacer()
                 Text("Bed by \(Format.clock(minuteOfDay: plan.bedtime))")
-                    .font(.app(.headline)).monospacedDigit().foregroundStyle(Theme.sleep)
+                    .font(.app(.headline)).foregroundStyle(Theme.sleep)
             }
             Text(planText(plan))
                 .font(.app(.subheadline)).foregroundStyle(Theme.textSecondary)

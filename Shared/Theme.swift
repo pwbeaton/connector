@@ -91,19 +91,39 @@ enum Theme {
 /// Open Font License and bundled in Shared/Fonts. The redesign leans on Archivo's width axis:
 /// condensed numerals (66–75%), slightly narrowed headings (85%), normal-width text.
 enum Typeface {
-    static let archivo = "ArchivoRoman-Regular"
+    static let archivo = "Archivo-SemiBold"
     static let monoRegular = "IBMPlexMono-Regular"
     static let monoMedium = "IBMPlexMono-Medium"
+
+    /// Line heights at `line-height: normal`, as a multiple of the font size (hhea ascent + descent).
+    /// SwiftUI sizes a line to exactly this; `lineBox` trims or pads it to the spec's CSS line height.
+    static let archivoNaturalLineHeight: CGFloat = 1.088
+    static let monoNaturalLineHeight: CGFloat = 1.3
 
     private static let weightAxis = 0x7767_6874 // 'wght'
     private static let widthAxis = 0x7764_7468  // 'wdth'
 
-    static func archivo(size: CGFloat, weight: Double, width: Double) -> CTFont {
-        let attributes: [CFString: Any] = [
-            kCTFontNameAttribute: archivo,
-            kCTFontVariationAttribute: [weightAxis: weight, widthAxis: width],
-        ]
-        return CTFontCreateWithFontDescriptor(CTFontDescriptorCreateWithAttributes(attributes as CFDictionary), size, nil)
+    /// The variable font straight from the bundled file, so it never depends on name lookup.
+    private static let archivoBase: CTFontDescriptor = {
+        for bundle in [Bundle.main] + Bundle.allBundles {
+            if let url = bundle.url(forResource: "Archivo-Variable", withExtension: "ttf"),
+               let descriptors = CTFontManagerCreateFontDescriptorsFromURL(url as CFURL) as? [CTFontDescriptor],
+               let first = descriptors.first {
+                return first
+            }
+        }
+        return CTFontDescriptorCreateWithNameAndSize(archivo as CFString, 0)
+    }()
+
+    /// Archivo at a weight (100–900) and width (62–125%). Digits are tabular like the spec
+    /// (`font-variant-numeric: tabular-nums`), baked into the font rather than applied with
+    /// SwiftUI's `.monospacedDigit()`, which can rebuild the font and drop the width axis.
+    static func archivo(size: CGFloat, weight: Double, width: Double, tabular: Bool = true) -> CTFont {
+        var attributes: [CFString: Any] = [kCTFontVariationAttribute: [weightAxis: weight, widthAxis: width]]
+        if tabular {
+            attributes[kCTFontFeatureSettingsAttribute] = [[kCTFontOpenTypeFeatureTag: "tnum", kCTFontOpenTypeFeatureValue: 1]]
+        }
+        return CTFontCreateWithFontDescriptor(CTFontDescriptorCreateCopyWithAttributes(archivoBase, attributes as CFDictionary), size, nil)
     }
 
     static func numericWeight(_ weight: Font.Weight) -> Double {
@@ -157,8 +177,8 @@ enum Typeface {
 
 extension Font {
     /// Archivo at an exact size, weight, and width (percent of normal).
-    static func archivo(_ size: CGFloat, _ weight: Font.Weight = .regular, width: Double = 100) -> Font {
-        Font(Typeface.archivo(size: size, weight: Typeface.numericWeight(weight), width: width))
+    static func archivo(_ size: CGFloat, _ weight: Font.Weight = .regular, width: Double = 100, tabular: Bool = true) -> Font {
+        Font(Typeface.archivo(size: size, weight: Typeface.numericWeight(weight), width: width, tabular: tabular))
     }
 
     /// IBM Plex Mono, for small uppercase labels, dates, and axis ticks.
@@ -176,14 +196,22 @@ extension Font {
         archivo(size, weight)
     }
 
-    /// Big score numerals: semibold Archivo at 66% width, tabular digits by default.
+    /// Big score numerals: semibold Archivo at 66% width with tabular digits.
     static func scoreNumber(_ size: CGFloat, tabular: Bool = true, width: Double = 66) -> Font {
-        let font = archivo(size, .semibold, width: width)
-        return tabular ? font.monospacedDigit() : font
+        archivo(size, .semibold, width: width, tabular: tabular)
     }
 }
 
 extension View {
+    /// Sizes text to a CSS `line-height` (a multiple of `size`), the way the spec lays it out.
+    /// A big number at `line-height: 0.8` sits in a box 0.8× its size, not the font's natural
+    /// 1.088×, so the space above and below it matches the design. Extra height on multi-line
+    /// text goes between lines too.
+    func lineBox(_ multiple: CGFloat, size: CGFloat, natural: CGFloat = Typeface.archivoNaturalLineHeight) -> some View {
+        let extra = (multiple - natural) * size
+        return lineSpacing(max(0, extra)).padding(.vertical, extra / 2)
+    }
+
     /// Small uppercase mono label, e.g. "RECOVERY".
     func sectionLabel(_ color: Color = Theme.textMuted) -> some View {
         font(.mono(11, .medium))
@@ -204,11 +232,13 @@ extension View {
     /// A large screen title: "Today", "Team".
     func screenTitle(_ size: CGFloat = 40) -> some View {
         font(.archivo(size, .bold, width: 85)).tracking(-size * 0.02).foregroundStyle(Theme.textPrimary)
+            .lineBox(1, size: size)
     }
 
     /// A section heading inside a screen: "Streaks", "Leaderboard".
     func sectionHeading() -> some View {
         font(.archivo(24, .bold, width: 85)).tracking(-0.24).foregroundStyle(Theme.textPrimary)
+            .lineBox(1, size: 24)
     }
 
     /// The mono eyebrow above a screen title: "TUE · OCT 27".

@@ -93,8 +93,11 @@ struct BiologicalAgeDetailView: View {
         let color = trend?.direction.color ?? Theme.textPrimary
         return VStack(spacing: 8) {
             Text(AgeFormat.age(result.biologicalAge))
-                .font(.scoreNumber(72, tabular: false))
+                .font(.scoreNumber(72))
+                .tracking(-1.44)
                 .foregroundStyle(color)
+                .lineBox(0.8, size: 72)
+                .padding(.bottom, 6)
             Text("Biological age · you're \(result.chronologicalAge)")
                 .sectionLabel()
             Text(AgeFormat.difference(result.difference))
@@ -163,7 +166,7 @@ struct BiologicalAgeDetailView: View {
                         }
                         Spacer()
                         Text(yearsText(contributor.years))
-                            .font(.app(.subheadline, .bold)).monospacedDigit()
+                            .font(.app(.subheadline, .bold))
                             .foregroundStyle(yearsColor(contributor.years))
                     }
                     if let years = contributor.years {
@@ -203,7 +206,7 @@ struct BiologicalAgeDetailView: View {
                 Spacer()
                 if let age = health.chronologicalAge {
                     Stepper(value: Binding(get: { age }, set: { save(age: $0) }), in: 18...100) {
-                        Text("\(age)").font(.app(.headline)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+                        Text("\(age)").font(.app(.headline)).foregroundStyle(Theme.textPrimary)
                     }
                     .fixedSize()
                 } else {

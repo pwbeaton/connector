@@ -116,7 +116,7 @@ struct TodayWidgetView: View {
     private var streak: some View {
         HStack(spacing: 2) {
             Image(systemName: "flame.fill").foregroundStyle(snapshot.streakDays > 0 ? Theme.recoverySteady : Theme.textSecondary)
-            Text("\(snapshot.streakDays)").monospacedDigit().foregroundStyle(Theme.textPrimary)
+            Text("\(snapshot.streakDays)").foregroundStyle(Theme.textPrimary)
         }
         .font(.app(.caption, .bold))
     }

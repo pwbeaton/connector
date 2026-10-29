@@ -132,7 +132,8 @@ struct ChartCard<Plot: View>: View {
                         }
                         Text("avg").font(.archivo(13)).foregroundStyle(Theme.textMuted)
                         Text(average.formatted(.number.precision(.fractionLength(decimals))))
-                            .font(.archivo(30, .semibold, width: 70)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+                            .font(.archivo(30, .semibold, width: 70)).foregroundStyle(Theme.textPrimary)
+                            .lineBox(1, size: 30)
                         if let unit { Text(unit).font(.archivo(13)).foregroundStyle(Theme.textMuted) }
                     }
                 }
@@ -371,7 +372,7 @@ struct TrendCard: View {
                 Spacer()
                 if let average {
                     Text("avg \(formatted(average))\(unit.isEmpty ? "" : " \(unit)")")
-                        .font(.app(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+                        .font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
                 }
             }
             if points.isEmpty {

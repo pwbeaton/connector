@@ -245,7 +245,7 @@ struct DayPage: View {
                 Dot()
                 HStack(spacing: 5) {
                     BatteryGlyph(level: Double(battery) / 100)
-                    Text("\(battery)%").font(.archivo(13)).monospacedDigit()
+                    Text("\(battery)%").font(.archivo(13))
                 }
                 .foregroundStyle(Theme.textSecondary)
             }
@@ -399,7 +399,7 @@ struct RecoveryCard: View {
                         .tracking(recovery.score == nil ? 0 : -3.8)
                         .foregroundStyle(recovery.score == nil ? Theme.textMuted : Theme.textPrimary)
                         .lineLimit(1)
-                        .frame(height: recovery.score == nil ? 64 : 104, alignment: .bottom)
+                        .lineBox(0.8, size: recovery.score == nil ? 72 : 128)
                     Text(recovery.score == nil ? "" : "/ 100").font(.archivo(15, .medium)).foregroundStyle(Theme.textMuted)
                 }
                 Spacer(minLength: 8)
@@ -421,14 +421,14 @@ struct RecoveryCard: View {
                           fill: Double(score.total), fillColor: Theme.teal,
                           markers: markers(score.total),
                           height: 40, labelRoom: 18,
-                          axis: [(0, "0"), (25, "25"), (50, "50"), (75, "75"), (100, "100")])
+                          axis: [(0, "0"), (25, "25"), (50, "50"), (75, "75"), (100, "100")], axisGap: 8)
                     .padding(.top, 12)
             }
             Text(message)
                 .font(.archivo(17, .medium))
                 .foregroundStyle(Theme.textPrimary)
-                .lineSpacing(3)
                 .fixedSize(horizontal: false, vertical: true)
+                .lineBox(1.35, size: 17)
                 .padding(.top, 18)
             Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 18).padding(.bottom, 16)
             HStack(alignment: .top, spacing: 12) {
@@ -467,7 +467,7 @@ struct RecoveryCard: View {
         var result: [TickScale.Marker] = []
         if let yesterday {
             result.append(.init(value: Double(yesterday), color: Theme.markerDashed, dashed: true, top: -2, height: 44,
-                                label: "yday \(yesterday)", labelPlacement: .trailing))
+                                label: "yday \(yesterday)", labelPlacement: .trailing, labelTop: -16))
         }
         result.append(.init(value: Double(value), color: Theme.textPrimary, top: -4, height: 48))
         return result
@@ -479,7 +479,7 @@ struct RecoveryCard: View {
             if let parts {
                 UnitNumber(parts: parts)
             } else {
-                Text("—").font(.archivo(28, .semibold, width: 75)).foregroundStyle(Theme.textFaint)
+                Text("—").font(.archivo(28, .semibold, width: 75)).foregroundStyle(Theme.textFaint).lineBox(1, size: 28)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -506,9 +506,9 @@ struct ScoreMiniCard: View {
             }
             Text(value.map(String.init) ?? "—")
                 .font(.scoreNumber(64))
-                .tracking(-1.3)
+                .tracking(-1.28)
                 .foregroundStyle(value == nil ? Theme.textFaint : Theme.textPrimary)
-                .frame(height: 52, alignment: .bottom)
+                .lineBox(0.82, size: 64)
             TickScale(range: 0...100,
                       minor: .init(divisions: 33, top: 0, height: 14),
                       fill: value.map(Double.init), fillColor: color,
@@ -540,8 +540,9 @@ struct EffortTargetCard: View {
                     Text(isToday ? "Today's effort target" : "Effort target").sectionLabel()
                     Spacer()
                     Text("\(scores.effortTarget.lowerBound)–\(scores.effortTarget.upperBound)")
-                        .font(.archivo(32, .semibold, width: 70)).monospacedDigit()
+                        .font(.archivo(32, .semibold, width: 70))
                         .foregroundStyle(Theme.effort)
+                        .lineBox(1, size: 32)
                 }
                 TickScale(range: 0...100,
                           minor: .init(divisions: 50, top: 10, height: 16),
@@ -559,8 +560,8 @@ struct EffortTargetCard: View {
                 coaching(scores)
                     .font(.archivo(15))
                     .foregroundStyle(Theme.textSecondary)
-                    .lineSpacing(3)
                     .fixedSize(horizontal: false, vertical: true)
+                    .lineBox(1.45, size: 15)
                     .padding(.top, 16)
             }
             .card()
@@ -624,7 +625,7 @@ struct TonightCard: View {
                 .foregroundStyle(Theme.sleep)
                 .padding(.top, 14)
             }
-            timeline.padding(.top, 14)
+            timeline.padding(.top, 10)
             if let debt {
                 Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 18).padding(.bottom, 14)
                 HStack {
@@ -633,6 +634,7 @@ struct TonightCard: View {
                     HStack(spacing: 10) {
                         if debt.minutes == 0 {
                             Text("None").font(.archivo(28, .semibold, width: 75)).foregroundStyle(Theme.textPrimary)
+                                .lineBox(1, size: 28)
                         } else {
                             UnitNumber(parts: UnitNumber.duration(minutes: debt.minutes))
                         }
@@ -651,8 +653,8 @@ struct TonightCard: View {
         return (Text(time.first ?? "").font(.archivo(44, .semibold, width: 70)).tracking(-0.44)
             + Text(time.count > 1 ? " " + time[1] : "").font(.archivo(18, .semibold, width: 90)))
             .foregroundStyle(Theme.textPrimary)
-            .monospacedDigit()
             .fixedSize()
+            .lineBox(0.85, size: 44)
     }
 
     private static func unwrap(_ minute: Int) -> Int { minute < 12 * 60 ? minute + 1440 : minute }
@@ -677,7 +679,7 @@ struct TonightCard: View {
             if abs(usual - bed) >= 5 {
                 bands.append(.init(from: min(bed, usual), to: max(bed, usual), color: Theme.sleepTint, top: -2, height: 34))
                 markers.append(.init(value: usual, color: Theme.markerDashed, dashed: true, top: -4, height: 38,
-                                     label: "usual \(shortClock(usualMinute))", labelPlacement: .trailing))
+                                     label: "usual \(shortClock(usualMinute))", labelPlacement: .trailing, labelTop: -22))
             }
         }
         markers.append(.init(value: bed, color: Theme.sleep, top: -6, height: 42,
@@ -767,6 +769,7 @@ struct StreaksRow: View {
                 ShieldGlyph(earned: true, size: 14).padding(.top, 1)
                 Text("Flames count days in a row. Shields are banked rest days: earn one every \(ScoreTuning.restTokenEveryDays) days in a row (hold up to \(ScoreTuning.maxRestTokens)). A missed day uses a shield.")
                     .fixedSize(horizontal: false, vertical: true)
+                    .lineBox(1.45, size: 13)
             }
             .font(.archivo(13))
             .foregroundStyle(Theme.textMuted)
@@ -785,7 +788,7 @@ struct StreaksRow: View {
             Text("\(state.current)")
                 .font(.scoreNumber(48))
                 .foregroundStyle(active ? Theme.textPrimary : Theme.textMuted)
-                .frame(height: 40, alignment: .bottom)
+                .lineBox(0.85, size: 48)
             Text(shortTitle(kind)).font(.archivo(13, .semibold)).foregroundStyle(Theme.textSecondary)
                 .lineLimit(1).minimumScaleFactor(0.8)
             HStack(spacing: 3) {
@@ -848,17 +851,17 @@ struct BiologicalAgeCard: View {
             if let result {
                 HStack(alignment: .lastTextBaseline, spacing: 10) {
                     Text(AgeFormat.age(result.biologicalAge))
-                        .font(.scoreNumber(84, tabular: false))
-                        .tracking(-1.7)
+                        .font(.scoreNumber(84))
+                        .tracking(-1.68)
                         .foregroundStyle(color)
-                        .frame(height: 68, alignment: .bottom)
+                        .lineBox(0.8, size: 84)
                     Text("vs \(result.chronologicalAge) actual").font(.archivo(15, .medium)).foregroundStyle(Theme.textSecondary)
                 }
                 .padding(.top, 10)
                 Text(AgeFormat.difference(result.difference))
                     .font(.archivo(17, .medium)).foregroundStyle(Theme.textPrimary)
                     .padding(.top, 12)
-                scale(result).padding(.top, 14)
+                scale(result).padding(.top, 12)
                 if let trend {
                     trendCapsule(trend, on: result.date).padding(.top, 18)
                 } else {

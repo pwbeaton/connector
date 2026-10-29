@@ -86,7 +86,10 @@ struct ScoreDetailView: View {
             Text(Format.dayTitle(date)).sectionLabel()
             Text(value.map(String.init) ?? "—")
                 .font(.scoreNumber(72))
+                .tracking(-1.44)
                 .foregroundStyle(valueColor)
+                .lineBox(0.8, size: 72)
+                .padding(.vertical, 4)
             if kind == .effort && date == health.today {
                 Text("Still building today").font(.app(.caption)).foregroundStyle(Theme.textSecondary)
             } else {
@@ -256,7 +259,7 @@ struct ScoreDetailView: View {
                         if let detail { Text(detail).font(.app(.caption)).foregroundStyle(Theme.textSecondary) }
                         Spacer()
                         Text(points.map { "\(Int($0.rounded()))/\(Int(maximum))" } ?? "no data")
-                            .font(.app(.caption, .semibold)).monospacedDigit().foregroundStyle(Theme.textSecondary)
+                            .font(.app(.caption, .semibold)).foregroundStyle(Theme.textSecondary)
                     }
                     ProgressBar(fraction: (points ?? 0) / maximum, color: kind.color, height: 6)
                 }

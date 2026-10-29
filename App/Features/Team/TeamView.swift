@@ -107,6 +107,7 @@ struct GroupChallengeCard: View {
                         .foregroundStyle(Color(light: 0xA9B7C0, dark: 0x8696A1))
                     Text(challenge.title).font(.archivo(20, .bold)).foregroundStyle(Color(light: 0xFFFFFF, dark: 0xEEF2F4))
                         .fixedSize(horizontal: false, vertical: true)
+                        .lineBox(1.1, size: 20)
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold))
@@ -215,8 +216,9 @@ struct LeaderboardSection: View {
                         .lineLimit(1)
                     Spacer(minLength: 8)
                     Text(Format.leaderboard(entry.value, metric: team.leaderboardMetric))
-                        .font(.archivo(22, .semibold, width: 72)).monospacedDigit()
+                        .font(.archivo(22, .semibold, width: 72))
                         .foregroundStyle(isYou ? Theme.teal : Theme.textPrimary)
+                        .lineBox(1, size: 22)
                 }
                 GeometryReader { proxy in
                     ZStack(alignment: .leading) {
@@ -275,9 +277,10 @@ struct FriendCardView: View {
     private func stat(_ title: String, _ value: String?, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.mono(11)).tracking(0.88).textCase(.uppercase).foregroundStyle(Theme.textMuted)
-            Text(value ?? "—").font(.archivo(28, .semibold, width: 72)).monospacedDigit()
+            Text(value ?? "—").font(.archivo(28, .semibold, width: 72))
                 .foregroundStyle(value == nil ? Theme.textFaint : color)
                 .lineLimit(1).minimumScaleFactor(0.7)
+                .lineBox(1, size: 28)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -285,7 +288,7 @@ struct FriendCardView: View {
     @ViewBuilder private var recoveryBadge: some View {
         if let recovery = card.recovery, let band = card.recoveryBand {
             VStack(alignment: .trailing, spacing: 4) {
-                Text("\(recovery)").font(.scoreNumber(36)).foregroundStyle(band.color).frame(height: 30, alignment: .bottom)
+                Text("\(recovery)").font(.scoreNumber(36)).foregroundStyle(band.color).lineBox(0.85, size: 36)
                 Text(band.title).font(.mono(10)).tracking(1).textCase(.uppercase).foregroundStyle(band.textColor)
             }
             .accessibilityElement(children: .ignore)
@@ -307,7 +310,7 @@ struct FriendCardView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Text(reaction.emoji).font(.system(size: 17))
-                        Text("\(reaction.count)").font(.archivo(15, .bold)).monospacedDigit()
+                        Text("\(reaction.count)").font(.archivo(15, .bold))
                     }
                     .padding(.leading, 12).padding(.trailing, 16).frame(height: 44)
                     .background(reaction.mine != nil ? Theme.tealTint : Theme.surfaceRaised, in: Capsule())

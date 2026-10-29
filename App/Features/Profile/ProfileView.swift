@@ -203,7 +203,7 @@ struct ProfileView: View {
             Image(systemName: symbol).foregroundStyle(color).frame(width: 24)
             Text(title).font(.app(.subheadline)).foregroundStyle(Theme.textPrimary)
             Spacer()
-            Text(value).font(.app(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Theme.textPrimary)
+            Text(value).font(.app(.subheadline, .semibold)).foregroundStyle(Theme.textPrimary)
         }
     }
 
@@ -258,8 +258,8 @@ struct TierCard: View {
             HStack(spacing: 16) {
                 TierHexagon(tier: tier.tier)
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(tier.tier.title).font(.archivo(48, .semibold, width: 70)).tracking(-0.5).foregroundStyle(Theme.textPrimary)
-                        .frame(height: 40, alignment: .bottom)
+                    Text(tier.tier.title).font(.archivo(48, .semibold, width: 70)).tracking(-0.48).foregroundStyle(Theme.textPrimary)
+                        .lineBox(0.85, size: 48)
                     Text(nextLine).font(.archivo(15, .semibold)).foregroundStyle(tier.tier.next == nil ? Theme.textSecondary : Theme.goldText)
                 }
             }
@@ -274,11 +274,12 @@ struct TierCard: View {
                           markers: markers,
                           height: 36, labelRoom: 20,
                           axis: [(0, "0"), (25, "25"), (50, "50"), (75, "75"), (100, "100")])
-                    .padding(.top, 20)
+                    .padding(.top, 16)
             }
             Text(tier.isCalibrating ? "Calibrating: your tier settles after 7 days of data." : "Share of sleep, step, and Effort goals hit over 28 days.")
                 .font(.archivo(15)).foregroundStyle(Theme.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .lineBox(1.45, size: 15)
                 .padding(.top, 16)
         }
         .card()
@@ -307,6 +308,7 @@ struct TierCard: View {
 // MARK: - Badges
 
 struct BadgesSection: View {
+    @Environment(\.colorScheme) private var colorScheme
     let earned: [EarnedBadge]
     @State private var selected: BadgeDefinition?
     @State private var showsAll = false
@@ -323,9 +325,10 @@ struct BadgesSection: View {
                  + Text(" of \(Badges.all.count)").font(.archivo(14)).foregroundStyle(Theme.textSecondary))
             }
             .padding(.top, 14)
-            Text("Milestones in sleep, activity, recovery, and consistency. Filled ones are earned; tap any badge to see what it takes.")
-                .font(.archivo(14)).foregroundStyle(Theme.textMuted).lineSpacing(2)
+            Text("Milestones in sleep, activity, recovery, and consistency. \(colorScheme == .dark ? "Filled" : "Dark") ones are earned; tap any badge to see what it takes.")
+                .font(.archivo(14)).foregroundStyle(Theme.textMuted)
                 .fixedSize(horizontal: false, vertical: true)
+                .lineBox(1.45, size: 14)
                 .padding(.top, -4)
             LazyVGrid(columns: columns, spacing: 10) {
                 ForEach(showsAll ? Badges.all : Array(Badges.all.prefix(9))) { badge in
@@ -342,8 +345,8 @@ struct BadgesSection: View {
                                 .font(.archivo(12))
                                 .foregroundStyle(Theme.textMuted)
                                 .multilineTextAlignment(.center)
-                                .lineSpacing(1)
                                 .fixedSize(horizontal: false, vertical: true)
+                                .lineBox(1.35, size: 12)
                             Spacer(minLength: 0)
                         }
                         .frame(maxWidth: .infinity, maxHeight: .infinity)

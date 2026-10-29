@@ -35,6 +35,9 @@ struct TickScale: View {
         var labelColor: Color = Theme.textMuted
         var labelWeight: Font.Weight = .regular
         var labelPlacement = LabelPlacement.center
+        /// Top of the label relative to the ticks, as in the spec (`top: -20px`). Defaults to
+        /// just above the marker.
+        var labelTop: CGFloat?
     }
 
     struct Line {
@@ -61,10 +64,12 @@ struct TickScale: View {
     /// Room reserved above the ticks for marker and band labels.
     var labelRoom: CGFloat = 0
     var axis: [(value: Double, label: String)] = []
+    /// Space between the ticks and the axis labels (10 in most of the spec, 8 under Recovery).
+    var axisGap: CGFloat = 10
     var axisColor: Color = Theme.textMuted
 
     var body: some View {
-        VStack(alignment: .leading, spacing: axis.isEmpty ? 0 : 8) {
+        VStack(alignment: .leading, spacing: axis.isEmpty ? 0 : axisGap) {
             Canvas { context, size in
                 draw(in: &context, width: size.width)
             }
@@ -90,7 +95,7 @@ struct TickScale: View {
             context.fill(Path(roundedRect: rect, cornerRadius: band.radius), with: .color(band.color))
             if let label = band.label {
                 context.draw(Text(label).font(.mono(10)).foregroundStyle(band.labelColor),
-                             at: CGPoint(x: (left + right) / 2, y: origin + min(band.top, -4) - 12), anchor: .center)
+                             at: CGPoint(x: (left + right) / 2, y: origin + band.top - 11.5), anchor: .center)
             }
         }
         let fillX = fill.map { x($0, width: width) }
@@ -122,11 +127,11 @@ struct TickScale: View {
             }
             if let label = marker.label {
                 let text = Text(label).font(.mono(10, marker.labelWeight)).foregroundStyle(marker.labelColor)
-                let y = origin + marker.top - 9
+                let y = origin + (marker.labelTop ?? marker.top - 15.5) + 6.5
                 switch marker.labelPlacement {
                 case .center: context.draw(text, at: CGPoint(x: center, y: y), anchor: .center)
                 case .trailing: context.draw(text, at: CGPoint(x: center + 6, y: y), anchor: .leading)
-                case .leading: context.draw(text, at: CGPoint(x: center - 8, y: y), anchor: .trailing)
+                case .leading: context.draw(text, at: CGPoint(x: center - 6, y: y), anchor: .trailing)
                 }
             }
         }
@@ -175,9 +180,9 @@ struct UnitNumber: View {
             }
             return result
         }
-        .monospacedDigit()
         .lineLimit(1)
         .fixedSize()
+        .lineBox(1, size: size)
     }
 
     /// "7h 2m" from minutes.

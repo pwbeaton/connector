@@ -156,7 +156,7 @@ struct StatPill: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.mono(11)).tracking(0.88).textCase(.uppercase).foregroundStyle(Theme.textMuted)
-            Text(value).font(.archivo(28, .semibold, width: 72)).monospacedDigit().foregroundStyle(color)
+            Text(value).font(.archivo(28, .semibold, width: 72)).foregroundStyle(color)
                 .lineLimit(1).minimumScaleFactor(0.6)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -199,7 +199,7 @@ struct ChangeLabel: View {
                 if change != 0 {
                     DeltaArrow(down: change < 0, color: color(change))
                 }
-                Text(change == 0 ? "Same \(caption)" : "\(abs(change)) \(caption)").monospacedDigit()
+                Text(change == 0 ? "Same \(caption)" : "\(abs(change)) \(caption)")
             }
             .font(.archivo(13))
             .foregroundStyle(Theme.textSecondary)

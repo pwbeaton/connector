@@ -70,6 +70,7 @@ struct WelcomeView: View {
                 HStack(spacing: 12) {
                     PlutoMark(size: 40)
                     Text("Pluto").font(.archivo(34, .bold, width: 85)).tracking(-0.68).foregroundStyle(.white)
+                        .lineBox(1, size: 34)
                 }
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Pluto")
@@ -83,18 +84,25 @@ struct WelcomeView: View {
             }
             Spacer(minLength: 24)
             VStack(alignment: .leading, spacing: 16) {
-                Text("Train together.\nRecover smarter.")
-                    .font(.archivo(50, .bold, width: 78))
-                    .tracking(-1)
-                    .lineSpacing(-4)
-                    .foregroundStyle(.white)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .minimumScaleFactor(0.8)
+                // Two lines at the spec's tight 0.96 line height; SwiftUI can't tighten
+                // line spacing below the font's own, so each line gets its own box.
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(["Train together.", "Recover smarter."], id: \.self) { line in
+                        Text(line)
+                            .font(.archivo(50, .bold, width: 78))
+                            .tracking(-1)
+                            .foregroundStyle(.white)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .lineBox(0.96, size: 50)
+                    }
+                }
+                .accessibilityElement(children: .combine)
+                .accessibilityAddTraits(.isHeader)
                 Text("Daily Recovery, Sleep, and Effort scores from your Fitbit Air, plus streaks, challenges, and leaderboards with friends.")
                     .font(.archivo(16))
-                    .lineSpacing(4)
                     .foregroundStyle(Color(hex: 0xB4C1C9))
                     .fixedSize(horizontal: false, vertical: true)
+                    .lineBox(1.5, size: 16)
             }
             Spacer(minLength: 24)
             VStack(spacing: 6) {
@@ -134,9 +142,9 @@ struct WelcomeView: View {
                     Image(systemName: "lock").font(.system(size: 14))
                     Text("Your raw health data stays on this iPhone. Friends see only the daily scores you choose to share.")
                         .fixedSize(horizontal: false, vertical: true)
+                        .lineBox(1.45, size: 13)
                 }
                 .font(.archivo(13))
-                .lineSpacing(2)
                 .foregroundStyle(Color(hex: 0x8FA0AB))
                 .padding(.top, 4)
             }
@@ -170,7 +178,7 @@ struct WelcomeReadout: View {
             HStack(alignment: .bottom) {
                 Text(title).font(.mono(11)).tracking(1.1).textCase(.uppercase).foregroundStyle(Color(hex: 0xA9B7C0))
                 Spacer()
-                Text("\(value)").font(.scoreNumber(42)).foregroundStyle(.white).frame(height: 36, alignment: .bottom)
+                Text("\(value)").font(.scoreNumber(42)).foregroundStyle(.white).lineBox(0.85, size: 42)
             }
             TickScale(range: 0...100,
                       minor: .init(divisions: 50, top: 7, height: 12),
