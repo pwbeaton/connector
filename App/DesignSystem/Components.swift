@@ -245,6 +245,8 @@ struct Banner: View {
     let message: String
     var color: Color = Theme.teal
     var actionTitle: String?
+    /// Shows a spinner where the action button would be.
+    var isBusy = false
     var action: (() -> Void)?
 
     var body: some View {
@@ -260,6 +262,8 @@ struct Banner: View {
                         .background(Theme.inverse, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
+            } else if isBusy {
+                ProgressView().controlSize(.small).tint(Theme.textSecondary)
             }
         }
         .padding(EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: action == nil ? 16 : 4))

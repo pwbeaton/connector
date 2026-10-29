@@ -121,6 +121,7 @@ struct DayPage: View {
     @Environment(AppSession.self) private var session
     @Environment(\.webAuthenticationSession) private var webAuthenticationSession
     @Environment(\.exitSampleData) private var exitSampleData
+    @Environment(\.openURL) private var openURL
 
     let date: CivilDate
     let canGoBack: Bool
@@ -256,6 +257,18 @@ struct DayPage: View {
     }
 
     @ViewBuilder private var banners: some View {
+        if health.isWaitingForTracker {
+            Banner(symbol: "arrow.triangle.2.circlepath",
+                   message: "Waiting for your \(health.device?.name ?? "tracker") to sync through Google Health…",
+                   isBusy: true)
+        } else if health.isTrackerStale(), let device = health.device {
+            Banner(symbol: "arrow.triangle.2.circlepath",
+                   message: "\(device.name) last synced \(device.lastSync.map { Format.ago($0) } ?? "a while ago"). Open Google Health to sync it.",
+                   color: Theme.effort, actionTitle: "Sync") {
+                health.waitForTrackerSync()
+                openURL(HealthModel.googleHealthAppURL)
+            }
+        }
         if session.services.isDemo, let exitSampleData {
             Banner(symbol: "sparkle", message: "You're exploring sample data", actionTitle: "Sign in") { exitSampleData() }
         }

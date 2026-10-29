@@ -13,6 +13,8 @@ final class HealthModel {
     private(set) var biologicalAges: [CivilDate: BiologicalAgeResult] = [:]
     /// Set when the training tier went up since the app last showed it (a moment to celebrate).
     var promotion: Tier?
+    /// True while waiting for the tracker to sync through the Google Health app (see `waitForTrackerSync`).
+    private(set) var isWaitingForTracker = false
 
     private let services: AppServices
     private let defaults: UserDefaults
@@ -39,6 +41,45 @@ final class HealthModel {
         case .failed(let message): message
         case .reconnectRequired: "Your Fitbit connection expired. Reconnect to keep syncing."
         default: lastReport?.uploadError
+        }
+    }
+
+    // MARK: Tracker sync
+
+    /// The Fitbit Air can't talk to other apps: it syncs only with the Google Health app, which
+    /// uploads to Google, which Pluto reads. Google's documented link to open that app on Today
+    /// (it syncs the tracker when opened). Falls back to Fitbit's website if it isn't installed.
+    static let googleHealthAppURL = URL(string: "https://www.fitbit.com/in-app/today")!
+    /// The tracker syncs every 15 minutes while Google Health runs in the background, so an hour
+    /// without a sync means it needs a nudge.
+    static let trackerStaleAfter: TimeInterval = 60 * 60
+
+    /// Whether the tracker hasn't reached Google recently (never in sample data).
+    func isTrackerStale(now: Date = .now) -> Bool {
+        guard !services.isDemo, let device else { return false }
+        guard let lastSync = device.lastSync else { return true }
+        return now.timeIntervalSince(lastSync) > Self.trackerStaleAfter
+    }
+
+    /// Call when sending the user to the Google Health app. Polls Google every 10 seconds (it
+    /// carries on when they come back) until the tracker's new sync shows up, then once more a
+    /// little later, because sleep and HRV can land after the device's sync time. Gives up after
+    /// about 3 minutes.
+    func waitForTrackerSync() {
+        guard !isWaitingForTracker else { return }
+        let baseline = device?.lastSync ?? .distantPast
+        isWaitingForTracker = true
+        Task {
+            defer { isWaitingForTracker = false }
+            for _ in 0..<18 {
+                try? await Task.sleep(for: .seconds(10))
+                await sync()
+                if let lastSync = device?.lastSync, lastSync > baseline {
+                    try? await Task.sleep(for: .seconds(15))
+                    await sync()
+                    return
+                }
+            }
         }
     }
 
